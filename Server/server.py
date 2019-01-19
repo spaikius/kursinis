@@ -19,7 +19,7 @@ __status__  = "Development"
 
 
 def main():
-    if sys.argv[1] == '--debug':
+    if len(sys.argv) != 1 and sys.argv[1] == '--debug':
         log_lvl = logging.DEBUG
     else:
         log_lvl = logging.INFO
