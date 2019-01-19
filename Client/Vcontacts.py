@@ -165,7 +165,7 @@ class TCPClient:
         # create socket
         try:
             self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self._socket.settimeout(15)
+            # self._socket.settimeout(15)
         except socket.error, msg:
             logging.error("Can't create socket. Error code: {}, msg: {}".format(*msg))
             raise
