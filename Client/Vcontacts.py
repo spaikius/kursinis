@@ -4,7 +4,6 @@ import tempfile
 from pymol import cmd
 from pymol.cgo import *
 from pymol import stored
-from multiprocessing.pool import ThreadPool
 
 python3 = sys.version_info >= (3,0)
 
@@ -25,23 +24,23 @@ def Vcontacts(model, solvent='False', randomColors='False', reverse='False',
     minimalDistanceMax='',seqSeparationMax='',host='127.0.0.1', port='8888'):
     """
 DESCRIPTION
-    Vcontacts - 
-    
+    Vcontacts -
+
 
 IMPORTANT
     ALL CALCULATIONS ARE MADE IN LOCAL SERVER
 
 USAGE
-    Vcontacts model [, solvent [, randomColors [, reverse [, chainLeftIn 
-                    [, resiNumLeftIn [, resiNameLeftIn [, atomSerialLeftIn 
-                    [, atomNameLeftIn [, chainLeftOut [, resiNumLeftOut 
+    Vcontacts model [, solvent [, randomColors [, reverse [, chainLeftIn
+                    [, resiNumLeftIn [, resiNameLeftIn [, atomSerialLeftIn
+                    [, atomNameLeftIn [, chainLeftOut [, resiNumLeftOut
                     [, resiNameLeftOut [, atomSerialLeftOut [, atomNameLeftOUT
-                    [, chainRightIn [, resiNumRightIn [, resiNameRightIn 
+                    [, chainRightIn [, resiNumRightIn [, resiNameRightIn
                     [, atomSerialRightIn [, atomNameRightIn [, chainRightOut
                     [, resiNumRightOut [, resiNameRightOut [, atomSerialRightOut
                     [, atomNameRightOUT [, contactAreaMin [, minimalDistanceMin
-                    [, seqSeparationMin [, contactAreaMax [, minimalDistanceMax 
-                    [, seqSeparationMax [, host [, port 
+                    [, seqSeparationMin [, contactAreaMax [, minimalDistanceMax
+                    [, seqSeparationMax [, host [, port
                     ]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]
 
 PARAMETERS              TYPE     DESCRIPTION
@@ -126,12 +125,9 @@ VCONTACTS                       2019-01-05
             print("File has been sent")
 
         print("Fetching CGO file...")
+
         # GET method returns temp file_obj handler
-        pool = ThreadPool(processes=1)
-
-        async_result = pool.apply_async(client.get_cgo, (model, query))
-
-        cgo_fh = async_result.get()
+        cgo_fh = client.get_cgo(model, query)
 
         # cgo_fh = client.get_cgo(model, query)
         print("Download completed.")
@@ -140,10 +136,10 @@ VCONTACTS                       2019-01-05
         logging.error("Server side error.")
         client.close()
         return
-    
+
     # close client
     client.close()
-    
+
     print("Loading CGO...")
     # draw CGOs
     draw_CGO(cgo_fh, model)
@@ -153,7 +149,7 @@ VCONTACTS                       2019-01-05
 
     return
 
-    
+
 stored.id = 1
 cmd.extend('Vcontacts', Vcontacts)
 
@@ -168,7 +164,7 @@ class TCPClient:
             raise ValueError("Port number must be numeric.")
         self._bufferSize = 8192
         self._socket = None
-        
+
     def start(self):
         """Function for initializing client socket and connecting to server"""
         # create socket
@@ -194,7 +190,7 @@ class TCPClient:
 
     def check_file(self, model):
         # Send file name for server to check
-        file_name = model.lower() 
+        file_name = model.lower()
         fh = get_pdb_file(file_name)
         file_size = fh.tell()
         fh.close()
@@ -202,7 +198,7 @@ class TCPClient:
         # Send request CHECKFILE FILENAME FILESIZE
         request = "CHECKFILE " + file_name + " " + str(file_size)
         self._socket.sendto(request, self.address)
-        
+
         # Wait for responce
         srv_resp = self._socket.recv(self._bufferSize)
         # OK - Means that server already has the file
@@ -212,20 +208,20 @@ class TCPClient:
             return False
 
     def send_file(self, model):
-        """Sends the file to the server"""  
+        """Sends the file to the server"""
         # Send files name
-        file_name = model.lower() 
+        file_name = model.lower()
         request = "SENDFILE " + file_name.lower()
         self._socket.sendto(request, self.address)
-        
+
         # Wait for ACK
         srv_resp = self._socket.recv(self._bufferSize)
 
         if srv_resp != "OK":
             raise Exception("Something went wrong...")
-        
+
         fh = get_pdb_file(file_name)
-        
+
         # Send files size
         file_size = fh.tell()
         fh.seek(0)
@@ -238,7 +234,7 @@ class TCPClient:
             raise Exception("Something went wrong...")
 
         self._socket.sendall(fh.read())
-        fh.close()        
+        fh.close()
         srv_resp = self._socket.recv(self._bufferSize)
         if srv_resp != "OK":
             raise Exception("Something went wrong...")
@@ -247,7 +243,7 @@ class TCPClient:
         """get_CGO draw data"""
         file_name = model.lower()
         query_len = len(query)
-        
+
         # Send GETCGO request
         request = "GETCGO " + file_name
         self._socket.sendto(request, self.address)
@@ -256,7 +252,7 @@ class TCPClient:
         srv_resp = self._socket.recv(self._bufferSize)
         if srv_resp.split(" ")[0] != 'OK':
             raise Exception("Something went wrong...")
-        
+
         # Send query len
         self._socket.sendto(str(query_len), self.address)
 
@@ -314,13 +310,13 @@ def extract_CGOs(file_object):
         line = file_object.readline().rstrip()
         if not line:
             break
-        
+
         data += line
 
         for m in re.finditer(pattern, data):
             data = m.group(2)
             yield m.group(1)
-        
+
 
 def draw_CGO(fh, model):
     '''Draws CGO'''
@@ -360,7 +356,7 @@ def compose(*args):
     match_first=append_to_local_output(match_first, "R", get_generic_value(args[3]))
     match_first=append_to_local_output(match_first, "A", get_generic_value(args[4]))
     output=append_to_global_output(output, "--match-first", match_first)
-    
+
     match_first_not=""
     match_first_not=append_to_local_output(match_first_not, "c", get_generic_value(args[5]))
     match_first_not=append_to_local_output(match_first_not, "r", get_generic_value(args[6]))
@@ -368,7 +364,7 @@ def compose(*args):
     match_first_not=append_to_local_output(match_first_not, "R", get_generic_value(args[8]))
     match_first_not=append_to_local_output(match_first_not, "A", get_generic_value(args[9]))
     output=append_to_global_output(output, "--match-first-not", match_first_not)
-    
+
     match_second=""
     match_second=append_to_local_output(match_second, "c", get_generic_value(args[10]))
     match_second=append_to_local_output(match_second, "r", get_generic_value(args[11]))
@@ -376,7 +372,7 @@ def compose(*args):
     match_second=append_to_local_output(match_second, "R", get_generic_value(args[13]))
     match_second=append_to_local_output(match_second, "A", get_generic_value(args[14]))
     output=append_to_global_output(output, "--match-second", match_second)
-    
+
     match_second_not=""
     match_second_not=append_to_local_output(match_second_not, "c", get_generic_value(args[15]))
     match_second_not=append_to_local_output(match_second_not, "r", get_generic_value(args[16]))
@@ -384,16 +380,16 @@ def compose(*args):
     match_second_not=append_to_local_output(match_second_not, "R", get_generic_value(args[18]))
     match_second_not=append_to_local_output(match_second_not, "A", get_generic_value(args[19]))
     output=append_to_global_output(output, "--match-second-not", match_second_not)
-    
+
     output=append_to_global_output(output, "--match-min-area", get_float_value(args[20]))
     output=append_to_global_output(output, "--match-max-area", get_float_value(args[23]))
-    
+
     output=append_to_global_output(output, "--match-min-dist", get_float_value(args[21]))
     output=append_to_global_output(output, "--match-max-dist", get_float_value(args[24]))
-    
+
     output=append_to_global_output(output, "--match-min-seq-sep", get_int_value(args[22]))
     output=append_to_global_output(output, "--match-max-seq-sep", get_int_value(args[25]))
-    
+
     return output
 
 def get_generic_value(val):

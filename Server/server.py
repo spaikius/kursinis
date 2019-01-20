@@ -54,6 +54,7 @@ def main():
             server.acceptConnection()
     except KeyboardInterrupt:
         logging.debug("Keyboard interrupt")
+    finally:
         server.shutdown()
         rj.stop()
 

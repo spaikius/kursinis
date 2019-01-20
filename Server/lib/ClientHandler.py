@@ -224,7 +224,7 @@ class ClientHandler:
             self.host, self.port, resp))
 
         ack = self.conn.recv(self._bufferSize).decode()
-        logging.info("Client: ACK recieved from {}:{} response: {}".format(
+        logging.info("Client: ACK recieved from {}:{} ACK: {}".format(
             self.host, self.port, ack))
 
         with open(draw_file, 'r') as fh:
