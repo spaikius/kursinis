@@ -4,7 +4,9 @@ import tempfile
 from pymol import cmd
 from pymol.cgo import *
 from pymol import stored
+from multiprocessing.pool import ThreadPool
 
+python3 = sys.version_info >= (3,0)
 
 __author__  = "Rimvydas Noreika"
 __credits__ = ["Justas Dapkūnas"]
@@ -125,10 +127,17 @@ VCONTACTS                       2019-01-05
 
         print("Fetching CGO file...")
         # GET method returns temp file_obj handler
-        cgo_fh = client.get_cgo(model, query)
+        pool = ThreadPool(processes=1)
+
+        async_result = pool.apply_async(client.get_cgo, (model, query))
+
+        cgo_fh = async_result.get()
+
+        # cgo_fh = client.get_cgo(model, query)
         print("Download completed.")
     except socket.timeout as e:
-        logging.info("Connection time out.")
+        # logging.error("Connection time out.")
+        logging.error("Server side error.")
         client.close()
         return
     
