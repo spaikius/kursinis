@@ -16,7 +16,7 @@ def create_contacts_file(file_name):
     pdb_file = Workspace.construct_file_path(path, file_name)
     contacts_file = Workspace.construct_file_path(path, 'contacts')
 
-    # how to be sure if file is not modified? HASH STRING? 
+    # how to be sure if file is not modified? HASH STRING?
     if Workspace.file_exists(contacts_file,file_path_FLAG=True):
         return True
 
@@ -51,12 +51,12 @@ def create_contacts_file(file_name):
             #     logging.error("Standard error in {} {} err: {}".format(
             #         PROGRAM_PATH, COMMAND_CONTACTS, pipe2.stderr))
             #     return (False, pipe.stderr)
-    
+
     except Exception as e:
         logging.error(e)
         # return (False, None)
         return False
-    
+
     logging.debug("Contacts file in {} has been created".format(path))
     # return (True, None)ALPHA
     return True
@@ -64,7 +64,7 @@ def create_contacts_file(file_name):
 def draw(file_name, query, ID):
     path = Workspace.mkdir(file_name)
     contacts_file = Workspace.construct_file_path(path, 'contacts')
-    
+
     draw_file = Workspace.construct_file_path(path, 'draw' + str(ID))
 
     random_colors = ''
@@ -83,9 +83,9 @@ def draw(file_name, query, ID):
         #     logging.error("Standard error in {} {} err: {}".format(
         #         PROGRAM_PATH, COMMAND_CONTACTS, pipe2.stderr))
         #     return (False, pipe.stderr)
-        
+
         devnull = open(os.devnull, 'w')
-             
+
         pipe2 = subprocess.Popen([
             PROGRAM_PATH,
             COMMAND_DRAW,

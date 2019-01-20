@@ -26,7 +26,7 @@ class ClientHandler:
                     # request = "opt-code, file-name, file-size"
                     self.handle_file(request[1:])
                 elif optCode == 'SENDFILE':
-                    # request = "opt-code, file-name" 
+                    # request = "opt-code, file-name"
                     self.handle_send_file(request[1:])
                 elif optCode == "GETCGO":
                     # reqest = "opt-code, program, file, *args"
@@ -75,7 +75,7 @@ class ClientHandler:
         file_name = request[0].lower()
         logging.info("Client:  {}:{} requested a SENDFILE for: {}".format(
             self.port, self.host, file_name))
-        
+
         # Send back OK as ACK
         resp = "OK"
         self.conn.sendall(resp.encode())
@@ -101,11 +101,11 @@ class ClientHandler:
         # send file in slices of self._bufferSize bytes:
         # open file in read byte mode:
         fh = open(filePath, "wb") # write bytes flag is passed
-        
+
         bytes_remaining = int(fileSize)
-        
+
         while bytes_remaining != 0:
-            if(bytes_remaining >= self._bufferSize): 
+            if(bytes_remaining >= self._bufferSize):
                 # receive slab from client
                 slab = self.conn.recv(self._bufferSize)
                 fh.write(slab)
@@ -159,11 +159,11 @@ class ClientHandler:
 
         # Recieve query
         bytes_remaining = int(querylen)
-        
+
         query = ''
-        
+
         while bytes_remaining != 0:
-            if(bytes_remaining >= self._bufferSize): 
+            if(bytes_remaining >= self._bufferSize):
                 # receive slab from client
                 slab = self.conn.recv(self._bufferSize).decode()
                 query += slab
@@ -179,14 +179,14 @@ class ClientHandler:
                 logging.debug("Client: To {}:{} Bytes sent: {}".format(
                     self.host, self.port, sizeof_slab_received))
                 bytes_remaining -= int(sizeof_slab_received)
-        
+
         logging.info("Client: Query received from {}:{} query: {}".format(
             self.host, self.port, query))
 
         query = query.split(' ')
-        
+
         success = Voronota.create_contacts_file(file_name)
-        
+
         # if ClientErr:
         #     resp = "BADQUERY" # Bad request
         #     self.conn.sendall(resp.encode())
@@ -233,4 +233,4 @@ class ClientHandler:
         logging.info("Server: File has been sent to {}:{}".format(
             self.host, self.port))
 
-        Workspace.delete_file(draw_file)                
+        Workspace.delete_file(draw_file)

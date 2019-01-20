@@ -4,12 +4,12 @@ import os
 import logging
 import sys
 
-sys.path.insert(0, 'lib')
+# sys.path.insert(0, 'lib')
 
-import Config
-import TCPServer
-import Workspace
-import RepeatJob
+from lib import Config
+from lib import Workspace
+from lib import TCPServer
+from lib import RepeatJob
 
 
 __author__  = "Rimvydas Noreika"
@@ -23,23 +23,23 @@ def main():
         log_lvl = logging.DEBUG
     else:
         log_lvl = logging.INFO
-    
+
 
     # Load configurations
     # Setup logger
     logging.basicConfig(
         filename=Config.LOGGER_FILE,
-        format=Config.LOGGER_FORMATTER, 
+        format=Config.LOGGER_FORMATTER,
         level=log_lvl)
-    
+
     # print log info in terminal
     logging.getLogger().addHandler(logging.StreamHandler())
-    
+
     # Setup root
     Workspace.mkdir_root()
     Workspace.cleanup()
     rj = RepeatJob.RepeatJob(Config.CHECK_FOR_OLD_FILES, Workspace.cleanup)
-    rj.start()    
+    rj.start()
 
     try:
         server = TCPServer.TCPServer(Config.HOST, Config.PORT)

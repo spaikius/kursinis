@@ -37,7 +37,7 @@ class TCPServer:
         self._serv_socket.listen(self._acpt_conn_num)
         self._running = True
         logging.info("Socket created, binded and now listening")
-        
+
     def running(self):
         return self._running
 

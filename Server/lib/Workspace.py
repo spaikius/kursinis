@@ -25,13 +25,13 @@ def file_exists(file_name, file_size=None, file_path_FLAG=False):
     """Checks if file exists"""
     mkdir_root()
     if file_path_FLAG:
-        return os.path.isfile(file_name) 
+        return os.path.isfile(file_name)
 
     dirPath = os.path.join(SERVER_DIR, file_name)
     if os.path.isdir(dirPath):
         filePath = os.path.join(dirPath, file_name)
         if file_size is None:
-            return os.path.isfile(filePath) 
+            return os.path.isfile(filePath)
         if os.path.isfile(filePath) and os.path.getsize(filePath) == int(file_size):
             return True
 
@@ -65,7 +65,7 @@ def cleanup():
         return
     for dir in os.listdir(SERVER_DIR):
         directory = os.path.join(SERVER_DIR, dir)
-        if time.time() - os.stat(directory).st_mtime > OLDER_THAN: 
+        if time.time() - os.stat(directory).st_mtime > OLDER_THAN:
             if os.path.isdir(directory):
                 logging.debug("Removing directory {}".format(directory))
                 shutil.rmtree(directory, ignore_errors=True)
