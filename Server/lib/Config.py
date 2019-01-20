@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import sys
+import os
 
 python3 = sys.version_info >= (3,0)
 
@@ -42,13 +43,15 @@ COMMAND_DRAW_PYMOL = '--drawing-for-pymol'
 
 
 ########################################################################
+path = os.sep.join((os.path.abspath(__file__).split(os.sep)[:-2]))
+
 config = configparser.ConfigParser()
-config.read('config.ini')
+config.read(os.path.join(path, 'config.ini'))
 
 HOST = config.get('Server', 'HOST')
 PORT = config.get('Server', 'PORT')
-SERVER_DIR = config.get('Server', 'SERVER_DIR')
-LOGGER_FILE = config.get('Logger', "LOGGER_FILE")
+SERVER_DIR = os.path.join(path, config.get('Server', 'SERVER_DIR'))
+LOGGER_FILE = os.path.join(path, config.get('Logger', "LOGGER_FILE"))
 
 if python3:
     LOGGER_FORMATTER = config.get('Logger', "LOGGER_FORMATTER", raw=True)
