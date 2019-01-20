@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 import sys
+
 python3 = sys.version_info >= (3,0)
+
 if python3:
     import configparser
 else:
@@ -16,11 +18,11 @@ SERVER_DIR = 'serverWorkSpace'
 LOGGER_FILE = 'server.log'
 LOGGER_FORMATTER = "%(asctime)s:%(levelname)s:%(message)s"
 
-# 
+#
 CHECK_FOR_OLD_FILES = 86400
 OLDER_THAN = 86400
 
-# Program 
+# Program
 PROGRAM_PATH = 'voronota'
 # program params
 COMMAND_ATOMS = 'get-balls-from-atoms-file'

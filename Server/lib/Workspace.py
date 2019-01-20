@@ -6,7 +6,7 @@ import time
 import shutil
 import logging
 
-from Config import *
+from .Config import *
 
 
 def mkdir_root():

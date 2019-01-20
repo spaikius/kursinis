@@ -1,9 +1,15 @@
 # -*- coding: utf-8 -*-
 
 import logging
+import sys
+python3 = sys.version_info >= (3,0)
 
-import Workspace
-import Voronota
+if python3:
+    from . import Workspace
+    from . import Voronota
+else:
+    import Workspace
+    import Voronota
 
 class ClientHandler:
     def __init__(self, conn, addr):

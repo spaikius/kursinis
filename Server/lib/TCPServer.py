@@ -9,10 +9,10 @@ python3 = sys.version_info >= (3,0)
 
 if python3:
     from _thread import start_new_thread
+    from . import ClientHandler
 else:
     from thread import start_new_thread
-
-import ClientHandler
+    import ClientHandler
 
 class TCPServer:
     def __init__(self, host, port):

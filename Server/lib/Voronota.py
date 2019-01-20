@@ -4,10 +4,16 @@ import subprocess
 import logging
 import tempfile
 import os
+import sys
 
-from Config import *
-import Workspace
+python3 = sys.version_info >= (3,0)
 
+if python3:
+    from . import Workspace
+    from .Config import *
+else:
+    import Workspace
+    from Config import *
 
 def create_contacts_file(file_name):
     """Creates contacts file"""
