@@ -171,7 +171,7 @@ class TCPClient:
         try:
             self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             # self._socket.settimeout(15)
-        except socket.error, msg:
+        except socket.error as msg:
             logging.error("Can't create socket. Error code: {}, msg: {}".format(*msg))
             raise
 
@@ -185,7 +185,7 @@ class TCPClient:
     def close(self):
         """Close the TCP connection"""
         # Report server that connection is closed
-        self._socket.sendall('')
+        self._socket.sendall(''.encode())
         self._socket.close()
 
     def check_file(self, model):
@@ -197,10 +197,10 @@ class TCPClient:
 
         # Send request CHECKFILE FILENAME FILESIZE
         request = "CHECKFILE " + file_name + " " + str(file_size)
-        self._socket.sendto(request, self.address)
+        self._socket.sendto(request.encode(), self.address)
 
         # Wait for responce
-        srv_resp = self._socket.recv(self._bufferSize)
+        srv_resp = self._socket.recv(self._bufferSize).decode()
         # OK - Means that server already has the file
         if srv_resp == "OK":
             return True
@@ -212,10 +212,10 @@ class TCPClient:
         # Send files name
         file_name = model.lower()
         request = "SENDFILE " + file_name.lower()
-        self._socket.sendto(request, self.address)
+        self._socket.sendto(request.endcode(), self.address)
 
         # Wait for ACK
-        srv_resp = self._socket.recv(self._bufferSize)
+        srv_resp = self._socket.recv(self._bufferSize).decode()
 
         if srv_resp != "OK":
             raise Exception("Something went wrong...")
@@ -226,16 +226,16 @@ class TCPClient:
         file_size = fh.tell()
         fh.seek(0)
 
-        self._socket.sendto(str(file_size), self.address)
+        self._socket.sendto(str(file_size).encode(), self.address)
 
         # Wait for ACK
-        srv_resp = self._socket.recv(self._bufferSize)
+        srv_resp = self._socket.recv(self._bufferSize).decode()
         if srv_resp != "OK":
             raise Exception("Something went wrong...")
 
-        self._socket.sendall(fh.read())
+        self._socket.sendall(fh.read().encode())
         fh.close()
-        srv_resp = self._socket.recv(self._bufferSize)
+        srv_resp = self._socket.recv(self._bufferSize).decode()
         if srv_resp != "OK":
             raise Exception("Something went wrong...")
 
@@ -246,26 +246,26 @@ class TCPClient:
 
         # Send GETCGO request
         request = "GETCGO " + file_name
-        self._socket.sendto(request, self.address)
+        self._socket.sendto(request.encode(), self.address)
 
         # Wait for ACK
-        srv_resp = self._socket.recv(self._bufferSize)
+        srv_resp = self._socket.recv(self._bufferSize).decode()
         if srv_resp.split(" ")[0] != 'OK':
             raise Exception("Something went wrong...")
 
         # Send query len
-        self._socket.sendto(str(query_len), self.address)
+        self._socket.sendto(str(query_len).encode(), self.address)
 
         # Wait for ACK
-        srv_resp = self._socket.recv(self._bufferSize)
+        srv_resp = self._socket.recv(self._bufferSize).decode()
         if srv_resp.split(" ")[0] != 'OK':
             raise Exception("Something went wrong...")
 
         # Send query
-        self._socket.sendall(query)
+        self._socket.sendall(query.encode())
 
         # Wait for responce
-        srv_resp = self._socket.recv(self._bufferSize)
+        srv_resp = self._socket.recv(self._bufferSize).decode()
         srv_resp = srv_resp.split(" ")
         if srv_resp[0] != 'OK':
             raise Exception("Something went wrong...")
@@ -273,7 +273,7 @@ class TCPClient:
         file_size = srv_resp[1]
 
         # Send file size ACK to server
-        self._socket.sendto(file_size, self.address)
+        self._socket.sendto(file_size.encode(), self.address)
 
         bytes_remaining = int(file_size)
 
@@ -281,12 +281,12 @@ class TCPClient:
         while bytes_remaining != 0:
             if bytes_remaining >= self._bufferSize:
                 # receive CGOdata slab from server
-                slab = self._socket.recv(self._bufferSize)
+                slab = self._socket.recv(self._bufferSize).decode()
                 tmp_file.write(slab)
                 sizeof_slab_received = len(slab)
                 bytes_remaining -= int(sizeof_slab_received)
             else:
-                slab = self._socket.recv(bytes_remaining)
+                slab = self._socket.recv(bytes_remaining).decode()
                 tmp_file.write(slab)
                 sizeof_slab_received = len(slab)
                 bytes_remaining -= int(sizeof_slab_received)
