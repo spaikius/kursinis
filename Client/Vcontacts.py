@@ -13,15 +13,34 @@ __version__ = "1.0.1"
 __status__  = "Development"
 
 
-def Vcontacts(model, solvent='False', randomColors='False', reverse='False',
+def Vcontacts(
+    # Selections
+    leftSelect='', rightSelect='',
+    # Left side positive filters
     chainLeftIn='',resiNumLeftIn='',resiNameLeftIn='',atomSerialLeftIn='',
-    atomNameLeftIn='',chainLeftOut='',resiNumLeftOut='',resiNameLeftOut='',
-    atomSerialLeftOut='',atomNameLeftOUT='',chainRightIn='',resiNumRightIn='',
-    resiNameRightIn='',atomSerialRightIn='',atomNameRightIn='',
-    chainRightOut='',resiNumRightOut='',resiNameRightOut='',
-    atomSerialRightOut='',atomNameRightOUT='',contactAreaMin='',
-    minimalDistanceMin='',seqSeparationMin='',contactAreaMax='',
-    minimalDistanceMax='',seqSeparationMax='',host='127.0.0.1', port='8888'):
+    atomNameLeftIn='',
+    # Left side negative filters
+    chainLeftOut='',resiNumLeftOut='',resiNameLeftOut='', atomSerialLeftOut='',
+    atomNameLeftOut='',
+    # Right side positive filters
+    chainRightIn='',resiNumRightIn='',resiNameRightIn='',atomSerialRightIn='',
+    atomNameRightIn='',
+    # Right side negative filters
+    chainRightOut='',resiNumRightOut='',resiNameRightOut='',atomSerialRightOut='',
+    atomNameRightOut='',
+    # Contact Area
+    contactAreaMin='',contactAreaMax='',
+    # Minimal distance
+    minimalDistanceMin='',minimalDistanceMax='',
+    # Sequence separation
+    seqSeparationMin='',seqSeparationMax='',
+    # Misc.
+    model='', solvent='False', color='False', reverse='False',
+    # Server connection
+    host='127.0.0.1', port='8888',
+    # Debug mode
+    debug='False'
+    ):
     """
 DESCRIPTION
     Vcontacts -
@@ -40,8 +59,8 @@ USAGE
                     [, resiNumRightOut [, resiNameRightOut [, atomSerialRightOut
                     [, atomNameRightOUT [, contactAreaMin [, minimalDistanceMin
                     [, seqSeparationMin [, contactAreaMax [, minimalDistanceMax
-                    [, seqSeparationMax [, host [, port
-                    ]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]
+                    [, seqSeparationMax [, host [, port [, debug
+                    ]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]
 
 PARAMETERS              TYPE     DESCRIPTION
     model               String   The name of the model
@@ -81,6 +100,8 @@ PARAMETERS-QUERY
     seqSeparationMin    Float    Minimum residue sequence separation
     seqSeparationMax    Float    Maximum residue sequence separation
 
+    debug               Boolean  Debug mode. default: False
+
 PARAMETERS-CONNECTION
     host                String   Server hostname.    Default localhost
     port                Integer  Server port number. Default 8888
@@ -92,20 +113,36 @@ EXAMPLE
 VCONTACTS                       2019-01-05
     """
 
-    # Setup logger
-    logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.INFO)
+    logging_level = logging.INFO
 
-    # Check if model exists
-    if not check_model(model.lower()):
-        logging.error("Model {} does not exist.".format(model))
+    if Bool(debug):
+        logging_level = logging.DEBUG
+
+    # Setup logger
+    logging.basicConfig(format='%(levelname)s:%(message)s', level=logging_level)
+
+    # Loggin error wrapper
+    logging.error = CallCounter(logging.error)
+
+    # Get model
+    model = get_model(model)
+
+    if logging.error.counter != 0:
         return
+
+
+    print(model)
+    return
+    # if not check_model(model.lower()):
+    #     logging.error("Model {} does not exist.".format(model))
+    #     return
 
     # Compose query commands
     query = compose(chainLeftIn,resiNumLeftIn,resiNameLeftIn,atomSerialLeftIn,
         atomNameLeftIn,chainLeftOut,resiNumLeftOut,resiNameLeftOut,
-        atomSerialLeftOut,atomNameLeftOUT,chainRightIn,resiNumRightIn,
+        atomSerialLeftOut,atomNameLeftOut,chainRightIn,resiNumRightIn,
         resiNameRightIn,atomSerialRightIn,atomNameRightIn,chainRightOut,
-        resiNumRightOut,resiNameRightOut,atomSerialRightOut,atomNameRightOUT,
+        resiNumRightOut,resiNameRightOut,atomSerialRightOut,atomNameRightOut,
         contactAreaMin,minimalDistanceMin,seqSeparationMin,contactAreaMax,
         minimalDistanceMax,seqSeparationMax,solvent,randomColors,reverse)
     try:
@@ -153,6 +190,16 @@ VCONTACTS                       2019-01-05
 stored.id = 1
 cmd.extend('Vcontacts', Vcontacts)
 
+class CallCounter:
+    """Decorator to determine number of calls for a method"""
+
+    def __init__(self, method):
+        self.method = method
+        self.counter = 0
+
+    def __call__(self, *args, **kwargs):
+        self.counter += 1
+        return self.method(*args, **kwargs)
 
 
 class TCPClient:
@@ -327,9 +374,24 @@ def draw_CGO(fh, model):
     stored.id += 1
 
 
-def check_model(model):
-    """Checks if model exists in pymol"""
-    return model in cmd.get_names()
+def get_model(model):
+    """Get model if not supplied or check if given model exists in pymol"""
+    all_models = cmd.get_names('objects')
+
+    if len(all_models) == 0:
+        logging.error('No models are opened.')
+        return
+
+    model = model.lower()
+
+    if model and (model in all_models):
+        return model
+
+    if len(all_models) > 1:
+        logging.error("Please specify which model you want to use. [{}]".format(all_models))
+        return
+
+    return all_models[0]
 
 
 def Bool(arg):
