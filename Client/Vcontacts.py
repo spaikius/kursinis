@@ -212,7 +212,7 @@ class TCPClient:
         # Send files name
         file_name = model.lower()
         request = "SENDFILE " + file_name.lower()
-        self._socket.sendto(request.endcode(), self.address)
+        self._socket.sendto(request.encode(), self.address)
 
         # Wait for ACK
         srv_resp = self._socket.recv(self._bufferSize).decode()
