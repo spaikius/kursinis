@@ -130,13 +130,6 @@ VCONTACTS                       2019-01-05
     if logging.error.counter != 0:
         return
 
-
-    print(model)
-    return
-    # if not check_model(model.lower()):
-    #     logging.error("Model {} does not exist.".format(model))
-    #     return
-
     # Compose query commands
     query = compose(chainLeftIn,resiNumLeftIn,resiNameLeftIn,atomSerialLeftIn,
         atomNameLeftIn,chainLeftOut,resiNumLeftOut,resiNameLeftOut,
