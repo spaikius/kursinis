@@ -1,6 +1,7 @@
 import logging
 import socket
 import tempfile
+
 from pymol import cmd
 from pymol.cgo import *
 from pymol import stored
@@ -35,7 +36,7 @@ def Vcontacts(
     # Sequence separation
     seqSeparationMin='',seqSeparationMax='',
     # Misc.
-    model='', solvent='False', color='False', reverse='False',
+    model='', solvent='False', color='False', invert='False',
     # Server connection
     host='127.0.0.1', port='8888',
     # Debug mode
@@ -50,7 +51,7 @@ IMPORTANT
     ALL CALCULATIONS ARE MADE IN LOCAL SERVER
 
 USAGE
-    Vcontacts model [, solvent [, color [, reverse [, chainLeftIn
+    Vcontacts model [, solvent [, color [, invert [, chainLeftIn
                     [, resiNumLeftIn [, resiNameLeftIn [, atomSerialLeftIn
                     [, atomNameLeftIn [, chainLeftOut [, resiNumLeftOut
                     [, resiNameLeftOut [, atomSerialLeftOut [, atomNameLeftOUT
@@ -66,7 +67,7 @@ PARAMETERS              TYPE     DESCRIPTION
     model               String   The name of the model
     solvent             Boolean  Display solvent contacts.   Default: False
     color        Boolean  Use random colors for CGO.  Default: False
-    reverse             Boolean  Reverse query.              Default: False
+    invert             Boolean  Reverse query.              Default: False
 
 PARAMETERS-QUERY
     chainLeftIn         String   Selection for first contacting group
@@ -141,13 +142,27 @@ VCONTACTS                       2019-01-05
     atomSerialRightIn = atomSerialRightIn + get_serials(rightSelect)
 
     # Compose query commands
-    query = compose(chainLeftIn,resiNumLeftIn,resiNameLeftIn,atomSerialLeftIn,
-        atomNameLeftIn,chainLeftOut,resiNumLeftOut,resiNameLeftOut,
-        atomSerialLeftOut,atomNameLeftOut,chainRightIn,resiNumRightIn,
-        resiNameRightIn,atomSerialRightIn,atomNameRightIn,chainRightOut,
-        resiNumRightOut,resiNameRightOut,atomSerialRightOut,atomNameRightOut,
-        contactAreaMin,minimalDistanceMin,seqSeparationMin,contactAreaMax,
-        minimalDistanceMax,seqSeparationMax,solvent,color,reverse)
+    query = compose(
+        # Left side positive filters
+        chainLeftIn,resiNumLeftIn,resiNameLeftIn,atomSerialLeftIn,
+        atomNameLeftIn,
+        # Left side negative filters
+        chainLeftOut,resiNumLeftOut,resiNameLeftOut, atomSerialLeftOut,
+        atomNameLeftOut,
+        # Right side positive filters
+        chainRightIn,resiNumRightIn,resiNameRightIn,atomSerialRightIn,
+        atomNameRightIn,
+        # Right side negative filters
+        chainRightOut,resiNumRightOut,resiNameRightOut,atomSerialRightOut,
+        atomNameRightOut,
+        # Contact Area
+        contactAreaMin,contactAreaMax,
+        # Minimal distance
+        minimalDistanceMin,minimalDistanceMax,
+        # Sequence separation
+        seqSeparationMin,seqSeparationMax,
+        # Misc.
+        model, solvent, color, invert)
 
     print(query)
     try:
@@ -184,7 +199,7 @@ VCONTACTS                       2019-01-05
     # draw CGOs
     draw_CGO(cgo_fh, model)
     print("Completed.")
-    
+
     return
 
 
@@ -445,58 +460,80 @@ def Bool(arg):
     return arg.lower() in ('y', 'true', 't', '1')
 
 
-def compose(*args):
+def compose(
+    # Left side positive filters
+    chainLeftIn,resiNumLeftIn,resiNameLeftIn,atomSerialLeftIn,
+    atomNameLeftIn,
+    # Left side negative filters
+    chainLeftOut,resiNumLeftOut,resiNameLeftOut, atomSerialLeftOut,
+    atomNameLeftOut,
+    # Right side positive filters
+    chainRightIn,resiNumRightIn,resiNameRightIn,atomSerialRightIn,
+    atomNameRightIn,
+    # Right side negative filters
+    chainRightOut,resiNumRightOut,resiNameRightOut,atomSerialRightOut,
+    atomNameRightOut,
+    # Contact Area
+    contactAreaMin,contactAreaMax,
+    # Minimal distance
+    minimalDistanceMin,minimalDistanceMax,
+    # Sequence separation
+    seqSeparationMin,seqSeparationMax,
+    # Misc.=''
+    model, solvent, color, invert):
     """For composing query arguments"""
+
     output=""
-    if Bool(args[27]):
+
+    if Bool(color):
         output+="--random-colors "
 
-    if not Bool(args[26]):
+    if not Bool(solvent):
         output+="--no-solvent "
 
-    if Bool(args[28]):
+    if Bool(invert):
         output+="--invert "
 
     match_first=""
-    match_first=append_to_local_output(match_first, "c", get_generic_value(args[0]))
-    match_first=append_to_local_output(match_first, "r", get_generic_value(args[1]))
-    match_first=append_to_local_output(match_first, "a", get_generic_value(args[2]))
-    match_first=append_to_local_output(match_first, "R", get_generic_value(args[3]))
-    match_first=append_to_local_output(match_first, "A", get_generic_value(args[4]))
+    match_first=append_to_local_output(match_first, "c", get_generic_value(chainLeftIn))
+    match_first=append_to_local_output(match_first, "r", get_generic_value(resiNumLeftIn))
+    match_first=append_to_local_output(match_first, "a", get_generic_value(atomSerialLeftIn))
+    match_first=append_to_local_output(match_first, "R", get_generic_value(resiNameLeftIn))
+    match_first=append_to_local_output(match_first, "A", get_generic_value(atomNameLeftIn))
     output=append_to_global_output(output, "--match-first", match_first)
 
     match_first_not=""
-    match_first_not=append_to_local_output(match_first_not, "c", get_generic_value(args[5]))
-    match_first_not=append_to_local_output(match_first_not, "r", get_generic_value(args[6]))
-    match_first_not=append_to_local_output(match_first_not, "a", get_generic_value(args[7]))
-    match_first_not=append_to_local_output(match_first_not, "R", get_generic_value(args[8]))
-    match_first_not=append_to_local_output(match_first_not, "A", get_generic_value(args[9]))
+    match_first_not=append_to_local_output(match_first_not, "c", get_generic_value(chainLeftOut))
+    match_first_not=append_to_local_output(match_first_not, "r", get_generic_value(resiNumLeftOut))
+    match_first_not=append_to_local_output(match_first_not, "a", get_generic_value(atomSerialLeftOut))
+    match_first_not=append_to_local_output(match_first_not, "R", get_generic_value(resiNameLeftOut))
+    match_first_not=append_to_local_output(match_first_not, "A", get_generic_value(atomNameLeftOut))
     output=append_to_global_output(output, "--match-first-not", match_first_not)
 
     match_second=""
-    match_second=append_to_local_output(match_second, "c", get_generic_value(args[10]))
-    match_second=append_to_local_output(match_second, "r", get_generic_value(args[11]))
-    match_second=append_to_local_output(match_second, "a", get_generic_value(args[12]))
-    match_second=append_to_local_output(match_second, "R", get_generic_value(args[13]))
-    match_second=append_to_local_output(match_second, "A", get_generic_value(args[14]))
+    match_second=append_to_local_output(match_second, "c", get_generic_value(chainRightIn))
+    match_second=append_to_local_output(match_second, "r", get_generic_value(resiNumRightIn))
+    match_second=append_to_local_output(match_second, "a", get_generic_value(atomSerialRightIn))
+    match_second=append_to_local_output(match_second, "R", get_generic_value(resiNameRightIn))
+    match_second=append_to_local_output(match_second, "A", get_generic_value(atomNameRightIn))
     output=append_to_global_output(output, "--match-second", match_second)
 
     match_second_not=""
-    match_second_not=append_to_local_output(match_second_not, "c", get_generic_value(args[15]))
-    match_second_not=append_to_local_output(match_second_not, "r", get_generic_value(args[16]))
-    match_second_not=append_to_local_output(match_second_not, "a", get_generic_value(args[17]))
-    match_second_not=append_to_local_output(match_second_not, "R", get_generic_value(args[18]))
-    match_second_not=append_to_local_output(match_second_not, "A", get_generic_value(args[19]))
+    match_second_not=append_to_local_output(match_second_not, "c", get_generic_value(chainRightOut))
+    match_second_not=append_to_local_output(match_second_not, "r", get_generic_value(resiNumRightOut))
+    match_second_not=append_to_local_output(match_second_not, "a", get_generic_value(atomSerialRightOut))
+    match_second_not=append_to_local_output(match_second_not, "R", get_generic_value(resiNameRightOut))
+    match_second_not=append_to_local_output(match_second_not, "A", get_generic_value(atomNameRightOut))
     output=append_to_global_output(output, "--match-second-not", match_second_not)
 
-    output=append_to_global_output(output, "--match-min-area", get_float_value(args[20]))
-    output=append_to_global_output(output, "--match-max-area", get_float_value(args[23]))
+    output=append_to_global_output(output, "--match-min-area", get_float_value(contactAreaMin))
+    output=append_to_global_output(output, "--match-max-area", get_float_value(contactAreaMax))
 
-    output=append_to_global_output(output, "--match-min-dist", get_float_value(args[21]))
-    output=append_to_global_output(output, "--match-max-dist", get_float_value(args[24]))
+    output=append_to_global_output(output, "--match-min-dist", get_float_value(minimalDistanceMin))
+    output=append_to_global_output(output, "--match-max-dist", get_float_value(minimalDistanceMax))
 
-    output=append_to_global_output(output, "--match-min-seq-sep", get_int_value(args[22]))
-    output=append_to_global_output(output, "--match-max-seq-sep", get_int_value(args[25]))
+    output=append_to_global_output(output, "--match-min-seq-sep", get_int_value(seqSeparationMin))
+    output=append_to_global_output(output, "--match-max-seq-sep", get_int_value(seqSeparationMax))
 
     return output
 
