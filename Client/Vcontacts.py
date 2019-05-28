@@ -14,7 +14,7 @@ __status__  = "Development"
 
 
 def Vcontacts(
-    # Selections
+    # Selectors
     leftSelect='', rightSelect='',
     # Left side positive filters
     chainLeftIn='',resiNumLeftIn='',resiNameLeftIn='',atomSerialLeftIn='',
@@ -50,7 +50,7 @@ IMPORTANT
     ALL CALCULATIONS ARE MADE IN LOCAL SERVER
 
 USAGE
-    Vcontacts model [, solvent [, randomColors [, reverse [, chainLeftIn
+    Vcontacts model [, solvent [, color [, reverse [, chainLeftIn
                     [, resiNumLeftIn [, resiNameLeftIn [, atomSerialLeftIn
                     [, atomNameLeftIn [, chainLeftOut [, resiNumLeftOut
                     [, resiNameLeftOut [, atomSerialLeftOut [, atomNameLeftOUT
@@ -65,7 +65,7 @@ USAGE
 PARAMETERS              TYPE     DESCRIPTION
     model               String   The name of the model
     solvent             Boolean  Display solvent contacts.   Default: False
-    randomColors        Boolean  Use random colors for CGO.  Default: False
+    color        Boolean  Use random colors for CGO.  Default: False
     reverse             Boolean  Reverse query.              Default: False
 
 PARAMETERS-QUERY
@@ -108,27 +108,37 @@ PARAMETERS-CONNECTION
 
 EXAMPLE
 
-    Vcontacts 5ara, randomColors=True, chainLeftIn=A C, resiNumLeftOut=20:50
+    Vcontacts 5ara, color=True, chainLeftIn=A C, resiNumLeftOut=20:50
 
 VCONTACTS                       2019-01-05
     """
 
+    # Setup logger
     logging_level = logging.INFO
 
     if Bool(debug):
         logging_level = logging.DEBUG
 
-    # Setup logger
+
     logging.basicConfig(format='%(levelname)s:%(message)s', level=logging_level)
 
     # Loggin error wrapper
     logging.error = CallCounter(logging.error)
 
-    # Get model
-    model = get_model(model)
+    # Get model from  selectors
+    sele_model = get_selectors_model(leftSelect, rightSelect)
+
+    if sele_model:
+        model = sele_model
+    else:
+        model = get_model(model)
 
     if logging.error.counter != 0:
         return
+
+    # Append atom serials
+    atomSerialLeftIn  = atomSerialLeftIn  + get_serials(leftSelect)
+    atomSerialRightIn = atomSerialRightIn + get_serials(rightSelect)
 
     # Compose query commands
     query = compose(chainLeftIn,resiNumLeftIn,resiNameLeftIn,atomSerialLeftIn,
@@ -137,7 +147,9 @@ VCONTACTS                       2019-01-05
         resiNameRightIn,atomSerialRightIn,atomNameRightIn,chainRightOut,
         resiNumRightOut,resiNameRightOut,atomSerialRightOut,atomNameRightOut,
         contactAreaMin,minimalDistanceMin,seqSeparationMin,contactAreaMax,
-        minimalDistanceMax,seqSeparationMax,solvent,randomColors,reverse)
+        minimalDistanceMax,seqSeparationMax,solvent,color,reverse)
+
+    print(query)
     try:
         # Create TCP client obj
         client = TCPClient(host, port)
@@ -164,23 +176,19 @@ VCONTACTS                       2019-01-05
     except socket.timeout as e:
         # logging.error("Connection time out.")
         logging.error("Server side error.")
-        client.close()
         return
 
-    # close client
-    client.close()
+    del client
 
     print("Loading CGO...")
     # draw CGOs
     draw_CGO(cgo_fh, model)
     print("Completed.")
-    # close temp file_obj handler
-    cgo_fh.close()
-
+    
     return
 
 
-stored.id = 1
+stored._vcontacts_id = 1
 cmd.extend('Vcontacts', Vcontacts)
 
 class CallCounter:
@@ -204,6 +212,9 @@ class TCPClient:
             raise ValueError("Port number must be numeric.")
         self._bufferSize = 8192
         self._socket = None
+
+    def __del__(self):
+        self.close()
 
     def start(self):
         """Function for initializing client socket and connecting to server"""
@@ -273,7 +284,7 @@ class TCPClient:
         if srv_resp != "OK":
             raise Exception("Something went wrong...")
 
-        self._socket.sendall(fh.read().encode())
+        self._socket.sendall(fh.read())
         fh.close()
         srv_resp = self._socket.recv(self._bufferSize).decode()
         if srv_resp != "OK":
@@ -317,28 +328,31 @@ class TCPClient:
 
         bytes_remaining = int(file_size)
 
-        tmp_file = tempfile.TemporaryFile()
+        # tmp_file = tempfile.TemporaryFile()
+        tmp_file = ''
         while bytes_remaining != 0:
             if bytes_remaining >= self._bufferSize:
                 # receive CGOdata slab from server
-                slab = self._socket.recv(self._bufferSize).decode()
-                tmp_file.write(slab)
+                slab = self._socket.recv(self._bufferSize)
+                # tmp_file.write(slab)
+                tmp_file += slab.decode()
                 sizeof_slab_received = len(slab)
                 bytes_remaining -= int(sizeof_slab_received)
             else:
-                slab = self._socket.recv(bytes_remaining).decode()
-                tmp_file.write(slab)
+                slab = self._socket.recv(bytes_remaining)
+                # tmp_file.write(slab)
+                tmp_file += slab.decode()
                 sizeof_slab_received = len(slab)
                 bytes_remaining -= int(sizeof_slab_received)
 
-        tmp_file.seek(0)
+        # tmp_file.seek(0)
         return tmp_file
 
 
 def get_pdb_file(model):
     '''Returns temp file_obj handler'''
     tmp_file = tempfile.TemporaryFile()
-    tmp_file.write(cmd.get_pdbstr(model))
+    tmp_file.write(cmd.get_pdbstr(model).encode())
     return tmp_file
 
 
@@ -351,7 +365,7 @@ def extract_CGOs(file_object):
         if not line:
             break
 
-        data += line
+        data += line.decode()
 
         for m in re.finditer(pattern, data):
             data = m.group(2)
@@ -360,16 +374,17 @@ def extract_CGOs(file_object):
 
 def draw_CGO(fh, model):
     '''Draws CGO'''
-    CGO = list()
-    for rawCGO in extract_CGOs(fh):
-        CGO[0:0] = [eval(cgo) for cgo in rawCGO.split(',')]
-    cmd.load_cgo(CGO, 'Vcontacts_' + model + '_' + str(stored.id))
-    stored.id += 1
+    # CGO = list()
+    # for rawCGO in extract_CGOs(fh):
+    #     CGO[0:0] = [eval(cgo) for cgo in rawCGO.split(',')]
+    # cmd.load_cgo(CGO, 'Vcontacts_' + model + '_' + str(stored._vcontacts_id))
+    # stored._vcontacts_id += 1
+    cmd.run(fh)
 
 
 def get_model(model):
     """Get model if not supplied or check if given model exists in pymol"""
-    all_models = cmd.get_names('objects')
+    all_models = cmd.get_object_list()
 
     if len(all_models) == 0:
         logging.error('No models are opened.')
@@ -381,10 +396,48 @@ def get_model(model):
         return model
 
     if len(all_models) > 1:
-        logging.error("Please specify which model you want to use. [{}]".format(all_models))
+        logging.error("Please specify which model you want to use. {}".format(all_models))
         return
 
     return all_models[0]
+
+
+def get_selectors_model(sele1, sele2):
+    Lmodel = get_model_from_selector(sele1)
+    Rmodel = get_model_from_selector(sele2)
+
+    if (Lmodel and Rmodel) and (Lmodel != Rmodel):
+        logging.error("Models in selectors does not match")
+        return None
+
+    return Lmodel
+
+
+def get_model_from_selector(selector):
+    if not selector:
+        return None
+
+    if not (selector in cmd.get_names('selections')):
+        logging.error("No such selector: {}".format(selector))
+        return None
+
+    models = cmd.get_object_list(selector)
+
+    if len(models) > 1:
+        logging.error("Selector {} is composed from different models".format(selector))
+        return None
+
+    return models[0]
+
+
+def get_serials(selector):
+    if not selector:
+        return ''
+
+    atoms_ids = {'atoms': []}
+    cmd.iterate(selector, 'atoms.append(ID)', space=atoms_ids)
+
+    return ' '.join(map(str,atoms_ids['atoms']))
 
 
 def Bool(arg):

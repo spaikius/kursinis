@@ -102,10 +102,10 @@ def draw(file_name, query, ID):
             draw_file,
             ], stdout=devnull, stdin=pipe.stdout)
         pipe2.wait()
-        # if pipe2.stderr:
-        #     logging.error("Standard error in {} {} err: {}".format(
-        #         PROGRAM_PATH, COMMAND_CONTACTS, pipe2.stderr))
-        #     return (False, pipe2.stderr)
+        if pipe2.stderr:
+            logging.error("Standard error in {} {} err: {}".format(
+                PROGRAM_PATH, COMMAND_CONTACTS, pipe2.stderr))
+            return (False, pipe2.stderr)
 
     except Exception as e:
         logging.error(e)

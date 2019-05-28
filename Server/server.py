@@ -55,7 +55,7 @@ def main():
     except KeyboardInterrupt:
         logging.debug("Keyboard interrupt")
     finally:
-        server.shutdown()
+        del server
         rj.stop()
 
 if __name__ == '__main__':

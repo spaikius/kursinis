@@ -18,6 +18,9 @@ class ClientHandler:
         self._bufferSize = 8192
         self.clientHandler()
 
+    def __del__(self):
+        pass
+
     def clientHandler(self):
         """Function for handling client connection."""
         try:
@@ -222,7 +225,8 @@ class ClientHandler:
         draw_file = Workspace.construct_file_path(
             Workspace.mkdir(file_name), 'draw' + str(self.port))
 
-        size = Workspace.get_file_size(draw_file)
+        # size = Workspace.get_file_size(draw_file)
+        size = len(draw_file)
 
         resp = "OK " + str(size)
         self.conn.sendall(resp.encode())
@@ -233,10 +237,12 @@ class ClientHandler:
         logging.info("Client: ACK recieved from {}:{} ACK: {}".format(
             self.host, self.port, ack))
 
-        with open(draw_file, 'r') as fh:
-                self.conn.sendall(fh.read().encode())
+        # with open(draw_file, 'r') as fh:
+        #         self.conn.sendall(fh.read().encode())
+
+        self.conn.sendall(draw_file.encode())
 
         logging.info("Server: File has been sent to {}:{}".format(
             self.host, self.port))
 
-        Workspace.delete_file(draw_file)
+        # Workspace.delete_file(draw_file)
