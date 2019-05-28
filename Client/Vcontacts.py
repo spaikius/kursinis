@@ -164,7 +164,6 @@ VCONTACTS                       2019-01-05
         # Misc.
         model, solvent, color, invert)
 
-    print(query)
     try:
         # Create TCP client obj
         client = TCPClient(host, port)
@@ -177,17 +176,11 @@ VCONTACTS                       2019-01-05
     try:
         # Check if server has PDB file
         if not client.check_file(model):
-            print("Sending the file...")
             client.send_file(model)
-            print("File has been sent")
 
-        print("Fetching CGO file...")
+        # GET method returns path to CGO file
+        cgo_path = client.get_cgo(model, query)
 
-        # GET method returns temp file_obj handler
-        cgo_fh = client.get_cgo(model, query)
-
-        # cgo_fh = client.get_cgo(model, query)
-        print("Download completed.")
     except socket.timeout as e:
         # logging.error("Connection time out.")
         logging.error("Server side error.")
@@ -195,10 +188,8 @@ VCONTACTS                       2019-01-05
 
     del client
 
-    print("Loading CGO...")
     # draw CGOs
-    draw_CGO(cgo_fh, model)
-    print("Completed.")
+    draw_CGO(cgo_path, model)
 
     return
 
@@ -263,7 +254,8 @@ class TCPClient:
 
         # Send request CHECKFILE FILENAME FILESIZE
         request = "CHECKFILE " + file_name + " " + str(file_size)
-        self._socket.sendto(request.encode(), self.address)
+        # self._socket.sendto(request.encode(), self.address)
+        self._socket.sendall(request.encode())
 
         # Wait for responce
         srv_resp = self._socket.recv(self._bufferSize).decode()
@@ -278,7 +270,8 @@ class TCPClient:
         # Send files name
         file_name = model.lower()
         request = "SENDFILE " + file_name.lower()
-        self._socket.sendto(request.encode(), self.address)
+        # self._socket.sendto(request.encode(), self.address)
+        self._socket.sendall(request.encode())
 
         # Wait for ACK
         srv_resp = self._socket.recv(self._bufferSize).decode()
@@ -292,7 +285,8 @@ class TCPClient:
         file_size = fh.tell()
         fh.seek(0)
 
-        self._socket.sendto(str(file_size).encode(), self.address)
+        # self._socket.sendto(str(file_size).encode(), self.address)
+        self._socket.sendall(str(file_size).encode())
 
         # Wait for ACK
         srv_resp = self._socket.recv(self._bufferSize).decode()
@@ -312,7 +306,7 @@ class TCPClient:
 
         # Send GETCGO request
         request = "GETCGO " + file_name
-        self._socket.sendto(request.encode(), self.address)
+        self._socket.sendall(request.encode())
 
         # Wait for ACK
         srv_resp = self._socket.recv(self._bufferSize).decode()
@@ -320,7 +314,8 @@ class TCPClient:
             raise Exception("Something went wrong...")
 
         # Send query len
-        self._socket.sendto(str(query_len).encode(), self.address)
+        # self._socket.sendto(str(query_len).encode(), self.address)
+        self._socket.sendall(str(query_len).encode())
 
         # Wait for ACK
         srv_resp = self._socket.recv(self._bufferSize).decode()
@@ -339,29 +334,26 @@ class TCPClient:
         file_size = srv_resp[1]
 
         # Send file size ACK to server
-        self._socket.sendto(file_size.encode(), self.address)
+        # self._socket.sendto(file_size.encode(), self.address)
+        self._socket.sendall(file_size.encode())
 
         bytes_remaining = int(file_size)
 
-        # tmp_file = tempfile.TemporaryFile()
-        tmp_file = ''
+        cgo_path = ''
+
         while bytes_remaining != 0:
             if bytes_remaining >= self._bufferSize:
-                # receive CGOdata slab from server
                 slab = self._socket.recv(self._bufferSize)
-                # tmp_file.write(slab)
-                tmp_file += slab.decode()
+                cgo_path += slab.decode()
                 sizeof_slab_received = len(slab)
                 bytes_remaining -= int(sizeof_slab_received)
             else:
                 slab = self._socket.recv(bytes_remaining)
-                # tmp_file.write(slab)
-                tmp_file += slab.decode()
+                cgo_path += slab.decode()
                 sizeof_slab_received = len(slab)
                 bytes_remaining -= int(sizeof_slab_received)
 
-        # tmp_file.seek(0)
-        return tmp_file
+        return cgo_path
 
 
 def get_pdb_file(model):
