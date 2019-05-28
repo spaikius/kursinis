@@ -120,7 +120,6 @@ VCONTACTS                       2019-01-05
     if Bool(debug):
         logging_level = logging.DEBUG
 
-
     logging.basicConfig(format='%(levelname)s:%(message)s', level=logging_level)
 
     # Loggin error wrapper
@@ -182,8 +181,7 @@ VCONTACTS                       2019-01-05
         cgo_path = client.get_cgo(model, query)
 
     except socket.timeout as e:
-        # logging.error("Connection time out.")
-        logging.error("Server side error.")
+        logging.error("Connection time out.")
         return
 
     del client
@@ -227,7 +225,8 @@ class TCPClient:
         # create socket
         try:
             self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            # self._socket.settimeout(15)
+            # 10 minutes for timeout
+            self._socket.settimeout(600)
         except socket.error as msg:
             logging.error("Can't create socket. Error code: {}, msg: {}".format(*msg))
             raise
@@ -254,7 +253,6 @@ class TCPClient:
 
         # Send request CHECKFILE FILENAME FILESIZE
         request = "CHECKFILE " + file_name + " " + str(file_size)
-        # self._socket.sendto(request.encode(), self.address)
         self._socket.sendall(request.encode())
 
         # Wait for responce
@@ -270,7 +268,6 @@ class TCPClient:
         # Send files name
         file_name = model.lower()
         request = "SENDFILE " + file_name.lower()
-        # self._socket.sendto(request.encode(), self.address)
         self._socket.sendall(request.encode())
 
         # Wait for ACK
@@ -285,7 +282,6 @@ class TCPClient:
         file_size = fh.tell()
         fh.seek(0)
 
-        # self._socket.sendto(str(file_size).encode(), self.address)
         self._socket.sendall(str(file_size).encode())
 
         # Wait for ACK
@@ -314,7 +310,6 @@ class TCPClient:
             raise Exception("Something went wrong...")
 
         # Send query len
-        # self._socket.sendto(str(query_len).encode(), self.address)
         self._socket.sendall(str(query_len).encode())
 
         # Wait for ACK
@@ -334,7 +329,6 @@ class TCPClient:
         file_size = srv_resp[1]
 
         # Send file size ACK to server
-        # self._socket.sendto(file_size.encode(), self.address)
         self._socket.sendall(file_size.encode())
 
         bytes_remaining = int(file_size)
@@ -363,30 +357,9 @@ def get_pdb_file(model):
     return tmp_file
 
 
-def extract_CGOs(file_object):
-    '''Extracts CGOs from temp file'''
-    pattern = re.compile(r'((?:COLOR|BEGIN).*?END)(.*$)')
-    data = ''
-    while True:
-        line = file_object.readline().rstrip()
-        if not line:
-            break
-
-        data += line.decode()
-
-        for m in re.finditer(pattern, data):
-            data = m.group(2)
-            yield m.group(1)
-
-
-def draw_CGO(fh, model):
+def draw_CGO(cgo_path, model):
     '''Draws CGO'''
-    # CGO = list()
-    # for rawCGO in extract_CGOs(fh):
-    #     CGO[0:0] = [eval(cgo) for cgo in rawCGO.split(',')]
-    # cmd.load_cgo(CGO, 'Vcontacts_' + model + '_' + str(stored._vcontacts_id))
-    # stored._vcontacts_id += 1
-    cmd.run(fh)
+    cmd.run(cgo_path)
 
 
 def get_model(model):
@@ -564,17 +537,17 @@ def get_input_logical_value(val):
 
 def append_to_local_output(main, suffix, value):
     result=main
-    if value != "":
-        if result != "":
-            result+="&"
-        result+=suffix+"<"+str(value)+">"
+    if value != '':
+        if result != '':
+            result+='&'
+        result+= suffix + '<' + str(value)+ '>'
     return result
 
 
 def append_to_global_output(main, suffix, value):
     result=main
-    if value!="":
-        if result != "":
-            result+=" "
-        result+=suffix+" '"+str(value)+"'"
+    if value != '':
+        if result != '':
+            result += ' '
+        result += suffix + ' \'' + str(value) + '\''
     return result
