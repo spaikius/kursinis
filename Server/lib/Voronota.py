@@ -81,12 +81,14 @@ def draw(file_name, query, ID, data):
         opacity_val = data['opacity']
 
 
-
     if query[0] == '--random-colors':
         random_colors = query.pop(0)
 
+
+
     try:
         file = open(contacts_file)
+
         pipe = subprocess.Popen([
             PROGRAM_PATH,
             COMMAND_QUERY_CONTACTS,
@@ -113,14 +115,14 @@ def draw(file_name, query, ID, data):
             draw_file,
             ], stdout=devnull, stdin=pipe.stdout)
         pipe2.wait()
+
+
         if pipe2.stderr:
             logging.error("Standard error in {} {} err: {}".format(
                 PROGRAM_PATH, COMMAND_CONTACTS, pipe2.stderr))
-            return (False, pipe2.stderr)
+            return (False)
 
     except Exception as e:
         logging.error(e)
-        # return (False, None)
         return False
-    # return (True, None)
     return True

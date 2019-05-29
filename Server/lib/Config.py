@@ -48,7 +48,7 @@ config.read(os.path.join(path, 'config.ini'))
 
 HOST = config.get('Server', 'HOST')
 PORT = config.get('Server', 'PORT')
-SERVER_DIR = os.path.join(path, config.get('Server', 'SERVER_DIR'))
+SERVER_DIR = os.path.join(path, config.get('Server', 'SERVER_CHACHE_NAME'))
 LOGGER_FILE = os.path.join(path, config.get('Logger', "LOGGER_FILE"))
 
 if python3:
@@ -56,7 +56,7 @@ if python3:
 else:
     LOGGER_FORMATTER = config.get('Logger', "LOGGER_FORMATTER", 1)
 
-CHECK_FOR_OLD_FILES = int(config.get('Cleanup', 'CHECK_FOR_OLD_FILES'))
-OLDER_THAN = int(config.get('Cleanup', 'OLDER_THAN'))
+CHECK_FOR_OLD_FILES = int(config.get('Cleanup', 'RUN_CHECK_EVERY'))
+OLDER_THAN = int(config.get('Cleanup', 'CACHE_LIFETIME'))
 
-PROGRAM_PATH = config.get('Program','PROGRAM_PATH')
+PROGRAM_PATH = config.get('Program','PROGRAM_EXE')

@@ -24,9 +24,6 @@ class TCPServer:
         self._acpt_conn_num = 10
         self._running = False
 
-    def __del__(self):
-        self.shutdown()
-
     def start(self):
         """Function for initializing, binding server socket and
         starts listening for connections"""

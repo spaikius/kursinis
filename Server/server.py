@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 # -*- coding: utf-8 -*-
 
 import os
@@ -45,7 +47,7 @@ def main():
         server = TCPServer.TCPServer(Config.HOST, Config.PORT)
         server.start()
     except Exception as e:
-        logging.critical("On server startup: {}".format(e.message))
+        logging.critical("Can't start the server: {}".format(e.msg))
         sys.exit()
 
     try:

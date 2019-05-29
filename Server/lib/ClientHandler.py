@@ -27,7 +27,7 @@ class ClientHandler:
         try:
             while True:
                 request = self.conn.recv(self._bufferSize).decode()
-                logging.info("Client: {}:{} request: {}".format(
+                logging.debug("Client: {}:{} request: {}".format(
                     self.host, self.port, request))
                 request = request.split(' ')
                 optCode = request[0]
@@ -47,7 +47,7 @@ class ClientHandler:
                 # else:
                 #     resp = "BADREQUEST"
                 #     self.conn.sendall(resp.encode())
-                #     logging.info("Server: Response send to {}:{} response: {}"
+                #     logging.debug("Server: Response send to {}:{} response: {}"
                 #         .format(self.host, self.port, resp))
                 #     break
         except Exception as e:
@@ -63,7 +63,7 @@ class ClientHandler:
         """Server FILE. Check if servas has file"""
         file_name = request[0].lower()
         file_size = request[1]
-        logging.info("Client: {}:{} requested a CHECKFILE: {} {}".format(
+        logging.debug("Client: {}:{} requested a CHECKFILE: {} {}".format(
             self.host,self.port,file_name, file_size))
 
         # check if file exist in server dir
@@ -71,35 +71,35 @@ class ClientHandler:
             # EXISTS
             resp = "OK"
             self.conn.sendall(resp.encode())
-            logging.info("Server: Response send to {}:{} response: {}".format(
+            logging.debug("Server: Response send to {}:{} response: {}".format(
                 self.host,self.port,resp))
         else:
             # NO FILE
             resp = "NOTFOUND"
             self.conn.sendall(resp.encode())
-            logging.info("Server: Response send to {}:{} response: {}".format(
+            logging.debug("Server: Response send to {}:{} response: {}".format(
                 self.host,self.port,resp))
 
     def handle_send_file(self, request):
         """Server PUT. Handles file transfering from client"""
         file_name = request[0].lower()
-        logging.info("Client:  {}:{} requested a SENDFILE for: {}".format(
+        logging.debug("Client:  {}:{} requested a SENDFILE for: {}".format(
             self.port, self.host, file_name))
 
         # Send back OK as ACK
         resp = "OK"
         self.conn.sendall(resp.encode())
-        logging.info("Server: Response send to {}:{} response: {}".format(
+        logging.debug("Server: Response send to {}:{} response: {}".format(
             self.host, self.port, resp))
 
         # Recieve file size
         fileSize = self.conn.recv(self._bufferSize).decode()
-        logging.info("Client: File size: {} bytes".format(fileSize))
+        logging.debug("Client: File size: {} bytes".format(fileSize))
 
         # Send back OK as ACK
         resp = "OK"
         self.conn.sendall(resp.encode())
-        logging.info("Server: Response send to {}:{} response: {}".format(
+        logging.debug("Server: Response send to {}:{} response: {}".format(
             self.host, self.port, resp))
 
         # Receive file
@@ -134,7 +134,7 @@ class ClientHandler:
         fh.close()
         resp = "OK"
         self.conn.sendall(resp.encode())
-        logging.info("Response send to {}:{} response: {}".format(
+        logging.debug("Response send to {}:{} response: {}".format(
             self.host, self.port, resp))
 
     def handle_get(self, request):
@@ -145,26 +145,26 @@ class ClientHandler:
             # EXISTS
             resp = "OK" # OK
             self.conn.sendall(resp.encode())
-            logging.info("Server: Response send to {}:{} response: {}".format(
+            logging.debug("Server: Response send to {}:{} response: {}".format(
                 self.host,self.port,resp))
         else:
             # NO FILE
             resp = "NOTFOUND"
             self.conn.sendall(resp.encode())
-            logging.info("Server: Response send to {}:{} response: {}".format(
+            logging.debug("Server: Response send to {}:{} response: {}".format(
                 self.host,self.port,resp))
             return
 
         # Recieve query len
         querylen = self.conn.recv(self._bufferSize).decode()
-        logging.info("Server: Query recieved len from {}:{} query len: {}"
+        logging.debug("Server: Query recieved len from {}:{} query len: {}"
             .format(self.host, self.port, querylen))
 
 
         # Send OK as ACK
         resp = "OK"
         self.conn.sendall(resp.encode())
-        logging.info("Server: Response send to {}:{} response: {}".format(
+        logging.debug("Server: Response send to {}:{} response: {}".format(
             self.host, self.port, resp))
 
         # Recieve query
@@ -190,7 +190,7 @@ class ClientHandler:
                     self.host, self.port, sizeof_slab_received))
                 bytes_remaining -= int(sizeof_slab_received)
 
-        logging.info("Client: Query received from {}:{} query: {}".format(
+        logging.debug("Client: Query received from {}:{} query: {}".format(
             self.host, self.port, query))
 
         success = Voronota.create_contacts_file(file_name)
@@ -198,13 +198,13 @@ class ClientHandler:
         # if ClientErr:
         #     resp = "BADQUERY" # Bad request
         #     self.conn.sendall(resp.encode())
-        #     logging.info("Response send to {}:{} response: {}".format(
+        #     logging.debug("Response send to {}:{} response: {}".format(
         #         self.host, self.port, resp))
 
         if not success:
             resp = "SERVERERROR" # Internal server error
             self.conn.sendall(resp.encode())
-            logging.info("Server: Response send to {}:{} response: {}".format(
+            logging.debug("Server: Response send to {}:{} response: {}".format(
                 self.host, self.port, resp))
 
 
@@ -217,13 +217,13 @@ class ClientHandler:
         # if ClientErr:
         #     resp = "BADQUERY" # Bad request
         #     self.conn.sendall(resp.encode())
-        #     logging.info("Response send to {}:{} response: {}".format(
+        #     logging.debug("Response send to {}:{} response: {}".format(
         #         self.host, self.port, resp))
 
         if not success:
             resp = "SERVERERROR" # Internal server error
             self.conn.sendall(resp.encode())
-            logging.info("Server: Response send to {}:{} response: {}".format(
+            logging.debug("Server: Response send to {}:{} response: {}".format(
                 self.host, self.port, resp))
 
         draw_file = Workspace.construct_file_path(
@@ -234,11 +234,11 @@ class ClientHandler:
 
         resp = "OK " + str(size)
         self.conn.sendall(resp.encode())
-        logging.info("Server: Response send to {}:{} (FILESIZE) response: {}".format(
+        logging.debug("Server: Response send to {}:{} (FILESIZE) response: {}".format(
             self.host, self.port, resp))
 
         ack = self.conn.recv(self._bufferSize).decode()
-        logging.info("Client: ACK recieved from {}:{} ACK: {}".format(
+        logging.debug("Client: ACK recieved from {}:{} ACK: {}".format(
             self.host, self.port, ack))
 
         # with open(draw_file, 'r') as fh:
@@ -246,7 +246,7 @@ class ClientHandler:
 
         self.conn.sendall(draw_file.encode())
 
-        logging.info("Server: File has been sent to {}:{}".format(
+        logging.debug("Server: File has been sent to {}:{}".format(
             self.host, self.port))
 
         # Workspace.delete_file(draw_file)
