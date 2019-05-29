@@ -2,6 +2,7 @@
 
 import logging
 import sys
+import json
 python3 = sys.version_info >= (3,0)
 
 if python3:
@@ -32,7 +33,7 @@ class ClientHandler:
                 optCode = request[0]
 
                 if optCode == 'CHECKFILE':
-                    # request = "opt-code, file-name, file-size"
+                    # request = "opt-code, file-name, checksum"
                     self.handle_file(request[1:])
                 elif optCode == 'SENDFILE':
                     # request = "opt-code, file-name"
@@ -40,15 +41,15 @@ class ClientHandler:
                 elif optCode == "GETCGO":
                     # reqest = "opt-code, program, file, *args"
                     self.handle_get(request[1:])
-                elif optCode == '':
+                else:
                     # Client disconect
                     break
-                else:
-                    resp = "BADREQUEST"
-                    self.conn.sendall(resp.encode())
-                    logging.info("Server: Response send to {}:{} response: {}"
-                        .format(self.host, self.port, resp))
-                    break
+                # else:
+                #     resp = "BADREQUEST"
+                #     self.conn.sendall(resp.encode())
+                #     logging.info("Server: Response send to {}:{} response: {}"
+                #         .format(self.host, self.port, resp))
+                #     break
         except Exception as e:
             logging.critical(e)
 
@@ -156,7 +157,7 @@ class ClientHandler:
 
         # Recieve query len
         querylen = self.conn.recv(self._bufferSize).decode()
-        logging.info("Client: Query recieved len from {}:{} query len: {}"
+        logging.info("Server: Query recieved len from {}:{} query len: {}"
             .format(self.host, self.port, querylen))
 
 
@@ -192,8 +193,6 @@ class ClientHandler:
         logging.info("Client: Query received from {}:{} query: {}".format(
             self.host, self.port, query))
 
-        query = query.split(' ')
-
         success = Voronota.create_contacts_file(file_name)
 
         # if ClientErr:
@@ -208,7 +207,12 @@ class ClientHandler:
             logging.info("Server: Response send to {}:{} response: {}".format(
                 self.host, self.port, resp))
 
-        success = Voronota.draw(file_name, query, self.port)
+
+        query_dict = json.loads(query)
+        query = query_dict['_query'].split(' ')
+        data = query_dict['data']
+
+        success = Voronota.draw(file_name, query, self.port, data)
 
         # if ClientErr:
         #     resp = "BADQUERY" # Bad request

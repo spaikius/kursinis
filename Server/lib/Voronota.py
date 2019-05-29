@@ -67,13 +67,21 @@ def create_contacts_file(file_name):
     # return (True, None)ALPHA
     return True
 
-def draw(file_name, query, ID):
+def draw(file_name, query, ID, data):
     path = Workspace.mkdir(file_name)
     contacts_file = Workspace.construct_file_path(path, 'contacts')
 
     draw_file = Workspace.construct_file_path(path, 'draw' + str(ID))
 
     random_colors = ''
+    opacity = '--alpha'
+    opacity_val = '1'
+
+    if data['opacity']:
+        opacity_val = data['opacity']
+
+
+
     if query[0] == '--random-colors':
         random_colors = query.pop(0)
 
@@ -92,12 +100,15 @@ def draw(file_name, query, ID):
 
         devnull = open(os.devnull, 'w')
 
+
         pipe2 = subprocess.Popen([
             PROGRAM_PATH,
             COMMAND_DRAW,
             random_colors,
-            COMMAND_DRAW_OPACITY,
-            COMMAND_DRAW_OPACITY_VAL,
+            opacity,
+            opacity_val,
+            '--drawing-name',
+            'vcontacts_' + str(ID),
             COMMAND_DRAW_PYMOL,
             draw_file,
             ], stdout=devnull, stdin=pipe.stdout)

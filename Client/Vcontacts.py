@@ -1,6 +1,7 @@
 import logging
 import socket
 import tempfile
+import json
 
 from pymol import cmd
 from pymol.cgo import *
@@ -36,7 +37,7 @@ def Vcontacts(
     # Sequence separation
     seqSeparationMin='',seqSeparationMax='',
     # Misc.
-    model='', solvent='False', color='False', invert='False',
+    model='', solvent='False', color='False', invert='False', opacity='1',
     # Server connection
     host='127.0.0.1', port='8888',
     # Debug mode
@@ -162,6 +163,15 @@ VCONTACTS                       2019-01-05
         seqSeparationMin,seqSeparationMax,
         # Misc.
         model, solvent, color, invert)
+
+    query_dict = {
+        '_query': query,
+        'data': {
+            'opacity': opacity
+        },
+    }
+
+    query = json.dumps(query_dict)
 
     try:
         # Create TCP client obj
@@ -450,7 +460,7 @@ def compose(
 
     output=""
 
-    if Bool(color):
+    if color == 'random':
         output+="--random-colors "
 
     if not Bool(solvent):

@@ -9,7 +9,7 @@ if python3:
 else:
     import ConfigParser as configparser
 
-
+# --- DEFAULTS ---
 # Server
 HOST = '127.0.0.1'
 PORT = 8888
@@ -37,8 +37,6 @@ COMMAND_CONTACTS_SIH_DEPTH_VAL = '0'
 COMMAND_CONTACTS_STEP = '--step'
 COMMAND_CONTACTS_STEP_VAL = '1'
 COMMAND_QUERY_CONTACTS_GRAPHICS = '--preserve-graphics'
-COMMAND_DRAW_OPACITY = '--alpha'
-COMMAND_DRAW_OPACITY_VAL = '0.2'
 COMMAND_DRAW_PYMOL = '--drawing-for-pymol'
 
 
