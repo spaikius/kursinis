@@ -47,8 +47,8 @@ def main():
         server = TCPServer.TCPServer(Config.HOST, Config.PORT)
         server.start()
     except Exception as e:
-        logging.critical("Can't start the server: {}".format(e.msg))
-        sys.exit()
+        logging.critical("Can't start the server")
+        return
 
     try:
         print("Server is running. Press Ctrl+C to stop")

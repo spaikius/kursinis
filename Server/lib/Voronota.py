@@ -5,6 +5,9 @@ import logging
 import tempfile
 import os
 import sys
+import re
+
+from collections import defaultdict
 
 python3 = sys.version_info >= (3,0)
 
@@ -116,7 +119,6 @@ def draw(file_name, query, ID, data):
             ], stdout=devnull, stdin=pipe.stdout)
         pipe2.wait()
 
-
         if pipe2.stderr:
             logging.error("Standard error in {} {} err: {}".format(
                 PROGRAM_PATH, COMMAND_CONTACTS, pipe2.stderr))
@@ -126,3 +128,31 @@ def draw(file_name, query, ID, data):
         logging.error(e)
         return False
     return True
+
+def summarize(file_name, query):
+    path = Workspace.mkdir(file_name)
+    contacts_file = Workspace.construct_file_path(path, 'contacts')
+
+    try:
+        file = open(contacts_file)
+
+        pipe = subprocess.Popen([
+            PROGRAM_PATH,
+            COMMAND_QUERY_CONTACTS,
+            '--summarize-by-first'
+            ]+query, stdin=file,stdout=subprocess.PIPE) #stdout=subprocess.PIPE)
+
+
+        summary = defaultdict(int)
+        for line in iter(pipe.stdout.readline, ''):
+            line = line.decode().strip()
+            if not line:
+                break
+            data = line.split(" ")
+            m = re.search('c<(.*?)>', data[0])
+            summary[m.group(1)] +=  float(data[2])
+
+    except Exception as e:
+        logging.error(e)
+        return False
+    return summary

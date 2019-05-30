@@ -2,6 +2,7 @@ import logging
 import socket
 import tempfile
 import json
+import hashlib
 
 from pymol import cmd
 from pymol.cgo import *
@@ -217,8 +218,16 @@ class CallCounter:
         return self.method(*args, **kwargs)
 
 
+class TimeOutErr(Exception): pass
+
 class TCPClient:
     '''TCP client'''
+
+    # CONSTANTS
+    RESP_OK   = 'OK'
+    CHECKFILE = 'CHECKFILE '
+    SENDFILE  = 'SENDFILE '
+
     def __init__(self, host, port):
         try:
             self.address = (host, int(port))
@@ -227,8 +236,16 @@ class TCPClient:
         self._bufferSize = 8192
         self._socket = None
 
-    def __del__(self):
-        self.close()
+    def send(self, request, encode=True):
+        if encode:
+            self._socket.sendall(request.encode())
+        else:
+            self._socket.sendall(request)
+
+    def recieve(self, decode=True):
+        if decode:
+            return self._socket.recv(self._bufferSize).decode()
+        return self._socket.recv(self._bufferSize)
 
     def start(self):
         """Function for initializing client socket and connecting to server"""
@@ -255,55 +272,50 @@ class TCPClient:
         self._socket.close()
 
     def check_file(self, model):
-        # Send file name for server to check
-        file_name = model.lower()
-        fh = get_pdb_file(file_name)
-        file_size = fh.tell()
+        fh = get_pdb_file(model)
+        m = hashlib.sha256()
+
+        for chunk in iter(fh.read(1024)):
+            m.update(chunk)
+
         fh.close()
 
-        # Send request CHECKFILE FILENAME FILESIZE
-        request = "CHECKFILE " + file_name + " " + str(file_size)
-        self._socket.sendall(request.encode())
+        # Send request CHECKFILE FILENAME CHECHSUM
+        self.send(self.CHECKFILE + model + " " + m.hexdigest())
 
         # Wait for responce
         srv_resp = self._socket.recv(self._bufferSize).decode()
-        # OK - Means that server already has the file
-        if srv_resp == "OK":
-            return True
-        else:
-            return False
+
+        return True if srv_resp == self.RESP_OK else False
+
 
     def send_file(self, model):
         """Sends the file to the server"""
-        # Send files name
-        file_name = model.lower()
-        request = "SENDFILE " + file_name.lower()
-        self._socket.sendall(request.encode())
 
-        # Wait for ACK
-        srv_resp = self._socket.recv(self._bufferSize).decode()
-
-        if srv_resp != "OK":
-            raise Exception("Something went wrong...")
-
-        fh = get_pdb_file(file_name)
-
-        # Send files size
+        fh = get_pdb_file(model)
         file_size = fh.tell()
         fh.seek(0)
 
-        self._socket.sendall(str(file_size).encode())
+        # Send request
+        request = self.SENDFILE + model + ' ' + str(file_size)
+        logging.debug("request {request}")
+        self.send(request)
 
         # Wait for ACK
-        srv_resp = self._socket.recv(self._bufferSize).decode()
-        if srv_resp != "OK":
-            raise Exception("Something went wrong...")
+        srv_resp = self.recieve()
 
-        self._socket.sendall(fh.read())
+        if srv_resp != self.RESP_OK:
+            logging.debug("response {srv_resp}")
+            raise Exception('Server refuse to accept file')
+
+
+        self.send(fh.read(), encode=False)
         fh.close()
-        srv_resp = self._socket.recv(self._bufferSize).decode()
+
+        srv_resp = self.recieve()
         if srv_resp != "OK":
-            raise Exception("Something went wrong...")
+            logging.debug("response {srv_resp}")
+            raise Exception('Fail after sending file')
 
     def get_cgo(self, model, query):
         """get_CGO draw data"""
@@ -343,21 +355,27 @@ class TCPClient:
 
         bytes_remaining = int(file_size)
 
-        cgo_path = ''
+        data = ''
 
         while bytes_remaining != 0:
             if bytes_remaining >= self._bufferSize:
                 slab = self._socket.recv(self._bufferSize)
-                cgo_path += slab.decode()
+                data += slab.decode()
                 sizeof_slab_received = len(slab)
                 bytes_remaining -= int(sizeof_slab_received)
             else:
                 slab = self._socket.recv(bytes_remaining)
-                cgo_path += slab.decode()
+                data += slab.decode()
                 sizeof_slab_received = len(slab)
                 bytes_remaining -= int(sizeof_slab_received)
 
-        return cgo_path
+
+
+        data = json.loads(data)
+
+        summary(data['summary'])
+
+        return data['path']
 
 
 def get_pdb_file(model):
@@ -365,6 +383,15 @@ def get_pdb_file(model):
     tmp_file = tempfile.TemporaryFile()
     tmp_file.write(cmd.get_pdbstr(model).encode())
     return tmp_file
+
+
+def summary(data):
+    total = 0
+    for chain in data:
+        print("Chain: %s Contact area: %.2f" % (chain, data[chain]))
+        total += data[chain]
+    if total:
+        print("Total area: %.2f" % (total))
 
 
 def draw_CGO(cgo_path):

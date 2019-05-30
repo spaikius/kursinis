@@ -22,27 +22,39 @@ class ClientHandler:
     def __del__(self):
         pass
 
+    def send(self, request, encode=True):
+        if encode:
+            self.conn.sendall(request.encode())
+        else:
+            self.conn.sendall(request)
+
+    def recieve(self, decode=True):
+        if decode:
+            return self.conn.recv(self._bufferSize).decode()
+        return self.conn.recv(self._bufferSize)
+
     def clientHandler(self):
         """Function for handling client connection."""
         try:
             while True:
-                request = self.conn.recv(self._bufferSize).decode()
-                logging.debug("Client: {}:{} request: {}".format(
-                    self.host, self.port, request))
+                request = self.recieve()
+                logging.debug(
+                    "Client: {}:{} request: {}"
+                        .format(self.host, self.port, request))
+
                 request = request.split(' ')
                 optCode = request[0]
 
                 if optCode == 'CHECKFILE':
                     # request = "opt-code, file-name, checksum"
-                    self.handle_file(request[1:])
+                    self.handle_file_check(request[1:])
                 elif optCode == 'SENDFILE':
                     # request = "opt-code, file-name"
                     self.handle_send_file(request[1:])
-                elif optCode == "GETCGO":
+                elif optCode == 'GETCGO':
                     # reqest = "opt-code, program, file, *args"
                     self.handle_get(request[1:])
                 else:
-                    # Client disconect
                     break
                 # else:
                 #     resp = "BADREQUEST"
@@ -58,43 +70,30 @@ class ClientHandler:
         logging.info("Server: Conection with {}:{} is closed"
             .format(self.host, self.port))
 
-
-    def handle_file(self, request):
+    def handle_file_check(self, request):
         """Server FILE. Check if servas has file"""
-        file_name = request[0].lower()
-        file_size = request[1]
+        file_name     = request[0].lower()
+        file_checksum = request[1]
+
         logging.debug("Client: {}:{} requested a CHECKFILE: {} {}".format(
-            self.host,self.port,file_name, file_size))
+            self.host, self.port, file_name, file_checksum))
 
         # check if file exist in server dir
-        if Workspace.file_exists(file_name, file_size):
-            # EXISTS
-            resp = "OK"
-            self.conn.sendall(resp.encode())
-            logging.debug("Server: Response send to {}:{} response: {}".format(
-                self.host,self.port,resp))
+        if Workspace.file_check_checksum(file_name, file_checksum):
+            self.send("OK")
+            logging.debug("Server: Response send to {}:{} response: OK"
+            .format(self.host,self.port))
         else:
-            # NO FILE
-            resp = "NOTFOUND"
-            self.conn.sendall(resp.encode())
-            logging.debug("Server: Response send to {}:{} response: {}".format(
-                self.host,self.port,resp))
+            self.send("NOTFOUND")
+            logging.debug("Server: Response send to {}:{} response: NOTFOUND"
+                .format(self.host,self.port))
 
     def handle_send_file(self, request):
         """Server PUT. Handles file transfering from client"""
         file_name = request[0].lower()
-        logging.debug("Client:  {}:{} requested a SENDFILE for: {}".format(
-            self.port, self.host, file_name))
-
-        # Send back OK as ACK
-        resp = "OK"
-        self.conn.sendall(resp.encode())
-        logging.debug("Server: Response send to {}:{} response: {}".format(
-            self.host, self.port, resp))
-
-        # Recieve file size
-        fileSize = self.conn.recv(self._bufferSize).decode()
-        logging.debug("Client: File size: {} bytes".format(fileSize))
+        file_size = request[1]
+        logging.debug("Client:  {}:{} requested a SENDFILE for: {} {}".format(
+            self.port, self.host, file_name, file_size))
 
         # Send back OK as ACK
         resp = "OK"
@@ -112,7 +111,7 @@ class ClientHandler:
         # open file in read byte mode:
         fh = open(filePath, "wb") # write bytes flag is passed
 
-        bytes_remaining = int(fileSize)
+        bytes_remaining = int(file_size)
 
         while bytes_remaining != 0:
             if(bytes_remaining >= self._bufferSize):
@@ -230,23 +229,26 @@ class ClientHandler:
             Workspace.mkdir(file_name), 'draw' + str(self.port))
 
         # size = Workspace.get_file_size(draw_file)
-        size = len(draw_file)
+        summary = Voronota.summarize(file_name, query)
 
-        resp = "OK " + str(size)
+        data = json.dumps({
+            'path': draw_file,
+            'summary': summary
+        })
+
+        resp = "OK " + str(len(data))
         self.conn.sendall(resp.encode())
-        logging.debug("Server: Response send to {}:{} (FILESIZE) response: {}".format(
+        logging.debug("Server: Response send to {}:{} (SIZE) response: {}".format(
             self.host, self.port, resp))
 
         ack = self.conn.recv(self._bufferSize).decode()
         logging.debug("Client: ACK recieved from {}:{} ACK: {}".format(
             self.host, self.port, ack))
 
-        # with open(draw_file, 'r') as fh:
-        #         self.conn.sendall(fh.read().encode())
-
-        self.conn.sendall(draw_file.encode())
+        self.conn.sendall(data.encode())
 
         logging.debug("Server: File has been sent to {}:{}".format(
             self.host, self.port))
+
 
         # Workspace.delete_file(draw_file)

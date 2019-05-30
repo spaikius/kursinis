@@ -4,6 +4,7 @@ import os
 import sys
 import time
 import shutil
+import hashlib
 import logging
 
 from .Config import *
@@ -36,6 +37,28 @@ def file_exists(file_name, file_size=None, file_path_FLAG=False):
             return True
 
     return False
+
+
+def file_check_checksum(file_name, checksum):
+    dirPath = os.path.join(SERVER_DIR, file_name)
+
+    if not os.path.isdir(dirPath):
+        return False
+
+    filePath = os.path.join(dirPath, file_name)
+
+    if not os.path.isfile(filePath):
+        return False
+
+    return True
+    m = hashlib.sha256()
+    with open(filePath, 'r') as fh:
+        for chunk in fh.read(1024).encode('utf-8'):
+            m.update(chunk)
+
+    logging.debug("CHECKSUM: {} : {}".format(checksum, m.hexdigest()))
+
+    return checksum == m.hexdigest()
 
 
 def mkdir(dir_name):
