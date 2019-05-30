@@ -197,7 +197,7 @@ VCONTACTS                       2019-01-05
     del client
 
     # draw CGOs
-    draw_CGO(cgo_path, model)
+    draw_CGO(cgo_path)
 
     return
 
@@ -367,9 +367,14 @@ def get_pdb_file(model):
     return tmp_file
 
 
-def draw_CGO(cgo_path, model):
+def draw_CGO(cgo_path):
     '''Draws CGO'''
-    cmd.run(cgo_path)
+    import os.path
+    # FIXME:
+    if os.path.isfile(cgo_path):
+        cmd.run(cgo_path)
+    else:
+        logging.info("No contacts found for the given query")
 
 
 def get_model(model):
