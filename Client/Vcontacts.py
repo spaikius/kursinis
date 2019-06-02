@@ -208,6 +208,10 @@ VCONTACTS                       2019-01-05
 
 stored._vcontacts_id = 1
 cmd.extend('Vcontacts', Vcontacts)
+selections_ = lambda: cmd.Shortcut(cmd.get_names('selections'))
+cmd.auto_arg[0]['Vcontacts'] = [selections_, 'left side selections', ', ']
+cmd.auto_arg[1]['Vcontacts'] = [selections_, 'right side selections', ', ']
+
 
 class CallCounter:
     """Decorator to determine number of calls for a method"""
@@ -291,7 +295,6 @@ class TCPClient:
         srv_resp = self._socket.recv(self._bufferSize).decode()
 
         return True if srv_resp == self.RESP_OK else False
-
 
     def send_file(self, model):
         """Sends the file to the server"""
