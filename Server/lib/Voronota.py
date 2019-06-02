@@ -25,24 +25,16 @@ def create_contacts_file(file_name):
     pdb_file = Workspace.construct_file_path(path, file_name)
     contacts_file = Workspace.construct_file_path(path, 'contacts')
 
-    # how to be sure if file is not modified? HASH STRING?
     if Workspace.file_exists(contacts_file,file_path_FLAG=True):
         return True
 
     try:
-        with open(pdb_file, 'rb') as file:
-            # ATOMS
+        with open(pdb_file, 'r') as file:
             pipe = subprocess.Popen([
                 PROGRAM_PATH,
                 COMMAND_ATOMS,
                 ANNOTATED
                 ], stdin=file, stdout=subprocess.PIPE)
-
-            # if pipe.stderr:
-            #     logging.error("Standard error in {} {} err: {}".format(
-            #         PROGRAM_PATH, COMMAND_ATOMS, pipe.stderr))
-            #     print pipe.stderr
-            #     return (False, pipe.stderr)
 
         with open(contacts_file, 'w') as fh:
             pipe2 = subprocess.Popen([
@@ -56,83 +48,53 @@ def create_contacts_file(file_name):
                 COMMAND_CONTACTS_STEP_VAL
                 ], stdin=pipe.stdout, stdout=fh)
             pipe2.wait()
-            # if pipe2.stderr:
-            #     logging.error("Standard error in {} {} err: {}".format(
-            #         PROGRAM_PATH, COMMAND_CONTACTS, pipe2.stderr))
-            #     return (False, pipe.stderr)
-
+            
     except Exception as e:
-        logging.error(e)
-        # return (False, None)
+        logging.error("Creating contacts: {}".format(e))
         return False
 
     logging.debug("Contacts file in {} has been created".format(path))
     # return (True, None)ALPHA
     return True
 
-def draw(file_name, query, ID, data):
+def draw(file_name, query, ID, params):
     path = Workspace.mkdir(file_name)
     contacts_file = Workspace.construct_file_path(path, 'contacts')
 
     draw_file = Workspace.construct_file_path(path, 'draw' + str(ID))
 
-    random_colors = ''
-    opacity = '--alpha'
-    opacity_val = '1'
+    query = query.split(' ')
+    filters = list(params['query'].keys())
+    drawing = list()
+    [drawing.extend([str(k),str(v)]) for k,v in params['drawing'].items()]
+    
+    # try:
+    file = open(contacts_file)
 
-    if data['opacity']:
-        opacity_val = data['opacity']
+    pipe = subprocess.Popen([
+        PROGRAM_PATH,
+        COMMAND_QUERY_CONTACTS,
+        COMMAND_QUERY_CONTACTS_GRAPHICS,
+        ]+query+filters, stdin=file, stdout=subprocess.PIPE) #stdout=subprocess.PIPE)
 
+    devnull = open(os.devnull, 'w')
 
-    if query[0] == '--random-colors':
-        random_colors = query.pop(0)
-
-
-
-    try:
-        file = open(contacts_file)
-
-        pipe = subprocess.Popen([
-            PROGRAM_PATH,
-            COMMAND_QUERY_CONTACTS,
-            COMMAND_QUERY_CONTACTS_GRAPHICS,
-            ]+query, stdin=file,stdout=subprocess.PIPE) #stdout=subprocess.PIPE)
-
-        # if pipe.stderr:
-        #     logging.error("Standard error in {} {} err: {}".format(
-        #         PROGRAM_PATH, COMMAND_CONTACTS, pipe2.stderr))
-        #     return (False, pipe.stderr)
-
-        devnull = open(os.devnull, 'w')
-
-
-        pipe2 = subprocess.Popen([
-            PROGRAM_PATH,
-            COMMAND_DRAW,
-            random_colors,
-            opacity,
-            opacity_val,
-            '--drawing-name',
-            'vcontacts_' + str(ID),
-            COMMAND_DRAW_PYMOL,
-            draw_file,
-            ], stdout=devnull, stdin=pipe.stdout)
-        pipe2.wait()
-
-        if pipe2.stderr:
-            logging.error("Standard error in {} {} err: {}".format(
-                PROGRAM_PATH, COMMAND_CONTACTS, pipe2.stderr))
-            return (False)
-
-    except Exception as e:
-        logging.error(e)
-        return False
+    pipe2 = subprocess.Popen([
+        PROGRAM_PATH,
+        COMMAND_DRAW,
+        '--drawing-name',
+        'vcontacts_' + str(ID),
+        COMMAND_DRAW_PYMOL,
+        draw_file,
+        ]+drawing, stdout=devnull, stdin=pipe.stdout)
+    pipe2.wait()
+    
     return True
 
 def summarize(file_name, query):
     path = Workspace.mkdir(file_name)
     contacts_file = Workspace.construct_file_path(path, 'contacts')
-
+    query = query.split(' ')
     try:
         file = open(contacts_file)
 

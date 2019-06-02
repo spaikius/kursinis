@@ -33,9 +33,9 @@ COMMAND_DRAW = 'draw-contacts'
 ANNOTATED = '--annotated'
 COMMAND_CONTACTS_DRAW = '--draw'
 COMMAND_CONTACTS_SIH_DEPTH = '--sih-depth'
-COMMAND_CONTACTS_SIH_DEPTH_VAL = '0'
+COMMAND_CONTACTS_SIH_DEPTH_VAL = '1'
 COMMAND_CONTACTS_STEP = '--step'
-COMMAND_CONTACTS_STEP_VAL = '1'
+COMMAND_CONTACTS_STEP_VAL = '2'
 COMMAND_QUERY_CONTACTS_GRAPHICS = '--preserve-graphics'
 COMMAND_DRAW_PYMOL = '--drawing-for-pymol'
 
@@ -59,4 +59,4 @@ else:
 CHECK_FOR_OLD_FILES = int(config.get('Cleanup', 'RUN_CHECK_EVERY'))
 OLDER_THAN = int(config.get('Cleanup', 'CACHE_LIFETIME'))
 
-PROGRAM_PATH = config.get('Program','PROGRAM_EXE')
+PROGRAM_PATH = config.get('Voronota','PROGRAM_EXE')

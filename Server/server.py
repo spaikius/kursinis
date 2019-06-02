@@ -6,7 +6,8 @@ import os
 import logging
 import sys
 
-# sys.path.insert(0, 'lib')
+if os.name == 'nt': #windwos
+    sys.path.insert(0, '.') 
 
 from lib import Config
 from lib import Workspace

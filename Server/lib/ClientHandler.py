@@ -194,12 +194,6 @@ class ClientHandler:
 
         success = Voronota.create_contacts_file(file_name)
 
-        # if ClientErr:
-        #     resp = "BADQUERY" # Bad request
-        #     self.conn.sendall(resp.encode())
-        #     logging.debug("Response send to {}:{} response: {}".format(
-        #         self.host, self.port, resp))
-
         if not success:
             resp = "SERVERERROR" # Internal server error
             self.conn.sendall(resp.encode())
@@ -208,10 +202,10 @@ class ClientHandler:
 
 
         query_dict = json.loads(query)
-        query = query_dict['_query'].split(' ')
-        data = query_dict['data']
+        query = query_dict['filter']
+        params = query_dict['params']
 
-        success = Voronota.draw(file_name, query, self.port, data)
+        success = Voronota.draw(file_name, query, self.port, params)
 
         # if ClientErr:
         #     resp = "BADQUERY" # Bad request
@@ -249,6 +243,4 @@ class ClientHandler:
 
         logging.debug("Server: File has been sent to {}:{}".format(
             self.host, self.port))
-
-
-        # Workspace.delete_file(draw_file)
+            

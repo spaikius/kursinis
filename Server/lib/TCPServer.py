@@ -29,6 +29,7 @@ class TCPServer:
         starts listening for connections"""
         try:
             self._serv_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self._serv_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             self._serv_socket.bind(self.address)
         except socket.error as msg:
             logging.critical("Can't create socket. Error code: {}, Msg: {}".format(*msg))

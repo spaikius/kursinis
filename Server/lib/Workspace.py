@@ -50,15 +50,14 @@ def file_check_checksum(file_name, checksum):
     if not os.path.isfile(filePath):
         return False
 
-    return True
-    m = hashlib.sha256()
-    with open(filePath, 'r') as fh:
-        for chunk in fh.read(1024).encode('utf-8'):
-            m.update(chunk)
+    sha = hashlib.sha256()
+    with open(filePath, 'rb') as fh:
+        for chunk in iter(lambda: fh.read(4096), "".encode()):
+            sha.update(chunk)
 
-    logging.debug("CHECKSUM: {} : {}".format(checksum, m.hexdigest()))
+    logging.debug("CHECKSUM: {} : {}".format(checksum, sha.hexdigest()))
 
-    return checksum == m.hexdigest()
+    return checksum == sha.hexdigest()
 
 
 def mkdir(dir_name):
