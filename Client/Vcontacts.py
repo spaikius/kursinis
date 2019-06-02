@@ -21,7 +21,7 @@ __status__  = "Development"
 
 def Vcontacts(
     # Selectors
-    leftSelect='', rightSelect='',
+    leftSelector='', rightSelector='',
     # Left side positive filters
     chainLeftIn='',resiNumLeftIn='',resiNameLeftIn='',atomSerialLeftIn='',
     atomNameLeftIn='',
@@ -54,19 +54,21 @@ DESCRIPTION
 
 IMPORTANT
     ALL CALCULATIONS ARE MADE IN LOCAL SERVER
+    DEPENDECIES: server.py, voronota executable
 
 USAGE
-    Vcontacts model [, solvent [, color [, invert [, chainLeftIn
-                    [, resiNumLeftIn [, resiNameLeftIn [, atomSerialLeftIn
-                    [, atomNameLeftIn [, chainLeftOut [, resiNumLeftOut
-                    [, resiNameLeftOut [, atomSerialLeftOut [, atomNameLeftOUT
-                    [, chainRightIn [, resiNumRightIn [, resiNameRightIn
-                    [, atomSerialRightIn [, atomNameRightIn [, chainRightOut
-                    [, resiNumRightOut [, resiNameRightOut [, atomSerialRightOut
-                    [, atomNameRightOUT [, contactAreaMin [, minimalDistanceMin
-                    [, seqSeparationMin [, contactAreaMax [, minimalDistanceMax
-                    [, seqSeparationMax [, host [, port [, debug
-                    ]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]
+    Vcontacts [ leftSelect [, rightSelect [, chainLeftIn [, resiNumLeftIn 
+              [, resiNameLeftIn [, atomSerialLeftIn [, atomNameLeftIn 
+              [, chainLeftOut [, resiNumLeftOut [, resiNameLeftOut 
+              [, atomSerialLeftOut [, atomNameLeftOut [, chainRightIn 
+              [, resiNumRightIn [, resiNameRightIn [, atomSerialRightIn 
+              [, atomNameRightIn [, chainRightOut [, resiNumRightOut 
+              [, resiNameRightOut [, atomSerialRightOut [, atomNameRightOut
+              [, contactAreaMin [, contactAreaMax [, minimalDistanceMin 
+              [, minimalDistanceMax [, seqSeparationMin [, seqSeparationMax 
+              [, model [, solvent [, color [, invert [, opacity [, host 
+              [, port [, debug 
+              ]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]
 
 PARAMETERS              TYPE     DESCRIPTION
     model               String   The name of the model       Default: current
@@ -115,9 +117,9 @@ PARAMETERS-CONNECTION
 
 EXAMPLE
 
-    Vcontacts 5ara, color=True, chainLeftIn=A C, resiNumLeftOut=20:50
+    Vcontacts color=#FFFF00, chainLeftIn=A C, resiNumLeftOut=20:50
 
-VCONTACTS                       2019-01-05
+VCONTACTS                       2019-05-31
     """
 
     # Logger level
@@ -130,7 +132,7 @@ VCONTACTS                       2019-01-05
     logging.parser_error = CallCounter(logging.error)
 
     # Get model from  selectors
-    sele_model = get_selectors_model(leftSelect, rightSelect)
+    sele_model = get_selectors_model(leftSelector, rightSelector)
 
     if sele_model:
         model = sele_model
@@ -143,8 +145,8 @@ VCONTACTS                       2019-01-05
         return
 
     # Append atom serials
-    atomSerialLeftIn  = atomSerialLeftIn  + get_serials(leftSelect)
-    atomSerialRightIn = atomSerialRightIn + get_serials(rightSelect)
+    atomSerialLeftIn  = atomSerialLeftIn  + get_serials(leftSelector)
+    atomSerialRightIn = atomSerialRightIn + get_serials(rightSelector)
 
     # Compose query commands
     Vfilter = compose(
