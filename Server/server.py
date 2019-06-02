@@ -1,13 +1,18 @@
 #!/usr/bin/env python3
-
 # -*- coding: utf-8 -*-
 
 import os
 import logging
 import sys
 
+srv_path = os.path.dirname(os.path.realpath(__file__))
+
 if os.name == 'nt': #windwos
-    sys.path.insert(0, '.') 
+    lib_path = os.path.join(srv_path, '.')
+    sys.path.insert(0, lib_path) 
+else:
+    lib_path = os.path.join(srv_path, 'lib')
+    sys.path.insert(0, lib_path)
 
 from lib import Config
 from lib import Workspace
