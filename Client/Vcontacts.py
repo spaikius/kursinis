@@ -54,7 +54,7 @@ DESCRIPTION
 
 IMPORTANT
     ALL CALCULATIONS ARE MADE IN LOCAL SERVER
-    DEPENDECIES: server.py, voronota executable
+    DEPENDECIES: server.py with voronota executable
 
 USAGE
     Vcontacts [ leftSelect [, rightSelect [, chainLeftIn [, resiNumLeftIn 

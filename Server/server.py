@@ -27,12 +27,9 @@ __status__  = "Development"
 
 
 def main():
-    if '--debug' in sys.argv:
-        log_lvl = logging.DEBUG
-    else:
-        log_lvl = logging.INFO
-
-
+    
+    log_lvl = logging.DEBUG if '--debug' in sys.argv else logging.INFO
+   
     # Load configurations
     # Setup logger
     logging.basicConfig(
