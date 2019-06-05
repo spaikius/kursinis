@@ -48,10 +48,6 @@ def Vcontacts(
     debug='False'
     ):
     """
-DESCRIPTION
-    Vcontacts -
-
-
 IMPORTANT
     ALL CALCULATIONS ARE MADE IN LOCAL SERVER
     DEPENDECIES: server.py with voronota executable
@@ -78,11 +74,11 @@ PARAMETERS              TYPE     DESCRIPTION
     invert              Boolean  Reverse query.              Default: False
 
 PARAMETERS-QUERY
-    chainLeftIn         String   Selection for first contacting group
-    resiNumLeftIn       Integer  Selection for first contacting group
-    resiNameLeftIn      String   Selection for first contacting group
-    atomSerialLeftIn    Integer  Selection for first contacting group
-    atomNameLeftIn      String   Selection for first contacting group
+    chainLeftIn         String   Selection for first contacting chains
+    resiNumLeftIn       Integer  Selection for first contacting residues ids
+    resiNameLeftIn      String   Selection for first contacting residues
+    atomSerialLeftIn    Integer  Selection for first contacting atoms ids
+    atomNameLeftIn      String   Selection for first contacting atoms
 
     chainLeftOut        String   Negative selection for first contacting group
     resiNumLeftOut      Integer  Negative selection for first contacting group
@@ -90,11 +86,11 @@ PARAMETERS-QUERY
     atomSerialLeftOut   Integer  Negative selection for first contacting group
     atomNameLeftOUT     String   Negative selection for first contacting group
 
-    chainRightIn        String   Selection for second contacting group
-    resiNumRightIn      Integer  Selection for second contacting group
-    resiNameRightIn     String   Selection for second contacting group
-    atomSerialRightIn   Integer  Selection for second contacting group
-    atomNameRightIn     String   Selection for second contacting group
+    chainRightIn        String   Selection for second contacting chains
+    resiNumRightIn      Integer  Selection for second contacting residues ids
+    resiNameRightIn     String   Selection for second contacting residues
+    atomSerialRightIn   Integer  Selection for second contacting atoms ids
+    atomNameRightIn     String   Selection for second contacting atoms
 
     chainRightOut       String   Negative selection for second contacting group
     resiNumRightOut     Integer  Negative selection for second contacting group
