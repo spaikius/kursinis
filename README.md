@@ -1,15 +1,16 @@
 ## Voronota version 1.19
+
 You can download the latest archive from the official downloads page: https://bitbucket.org/kliment/voronota/downloads
-
-
+Voronota is developed by Kliment Olechnovic (kliment@ibt.lt)
 
 ## Vcontacts installation guide
 
 ```
-1) download install.zip
-2) extract install.zip
-3) go to install directory
-4) in command line type: make
+1) download vcontacts.zip
+2) extract vcontacts.zip
+3) go to vcontacts directory
+4) voronota installation guide is in the voronota1.19 folder
+4) After install voronota, set VORONOTA_EXE variable in Server/config.init to realm path to voronota executable 
 ```
 ## To run server
 You can run it via python interpreter: python /PATH/TO/server.py
